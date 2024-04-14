@@ -44,7 +44,7 @@ public function boot(): void
     }
 }
 ```
-你可以基于我们提供的注解来生成接口文档:
+You can generate API documentation based on the annotations we provide:
 ```shell
 php artisan docs:build
 php artisan docs:run
