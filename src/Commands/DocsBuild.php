@@ -80,10 +80,15 @@ class DocsBuild extends Command
         $builder->nav('Home', '/')
             ->nav('Api', '/Menu/add')
             ->sidebar('Api');
+        $isFirst = false;
         foreach ($apis as $api) {
             $dir = $this->createDirectoryFromClassNamespace($api['namespace'], $docsDir);
             foreach ($api['actions'] as $action) {
                 $link = Str::replace('\\', '/', Str::after($dir, 'docs').'/'.$action['name']);
+                if (!$isFirst) {
+                    $builder->nav('Api', $link);
+                    $isFirst = true;
+                }
                 $builder->sidebarAppendItem('Api', $action['name'], $link);
                 $filename = $dir.DIRECTORY_SEPARATOR.$action['name'].'.md';
                 File::put($filename, $this->generateApiContent($api, $action));
