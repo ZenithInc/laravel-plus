@@ -24,3 +24,28 @@ use Zenith\LaravelPlus\EasyRouter;
 
 EasyRouter::register();
 ```
+
+## Easy Docs
+
+Currently, we support using VitePress to build API documentation. You simply need to create a VitePress-based project in the root directory of your project and name it docs. For how to create the project, you can refer to its official documentation.
+
+Then, you just need to register the documentation-related commands in the project, by editing App\Providers\AppService\Provider.php, as follows:
+```php
+use Zenith\LaravelPlus\Commands\DocsRun;
+use Zenith\LaravelPlus\Commands\DocsBuild;
+
+public function boot(): void
+{
+    if ($this->app->runningInConsole()) {
+        $this->commands([
+            DocsBuild::class,
+            DocsRun::class,            
+        ]);
+    }
+}
+```
+你可以基于我们提供的注解来生成接口文档:
+```shell
+php artisan docs:build
+php artisan docs:run
+```
