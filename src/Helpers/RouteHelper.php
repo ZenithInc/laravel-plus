@@ -10,6 +10,7 @@ use Zenith\LaravelPlus\Attributes\Routes\DeleteMapping;
 use Zenith\LaravelPlus\Attributes\Routes\GetMapping;
 use Zenith\LaravelPlus\Attributes\Routes\PostMapping;
 use Zenith\LaravelPlus\Attributes\Routes\PutMapping;
+use Zenith\LaravelPlus\Middlewares\RequestBodyInjector;
 
 class RouteHelper
 {
@@ -71,6 +72,7 @@ class RouteHelper
     {
         $instance = $attribute->newInstance();
         $uri = $prefix.$instance->path;
-        Route::{$routesMapping[$attribute->getName()]}($uri, [$controller, $method->getName()]);
+        Route::{$routesMapping[$attribute->getName()]}($uri, [$controller, $method->getName()])
+            ->middleware([RequestBodyInjector::class]);
     }
 }

@@ -76,14 +76,3 @@ class Controller
     }
 }
 ```
-You need to register the middleware for it to take effect:
-```php
-use Zenith\LaravelPlus\Middlewares\RequestBodyInjector;
-
-return Application::configure(basePath: dirname(__DIR__))
-    ->withMiddleware(function (Middleware $middleware) {
-        $middleware->append(RequestBodyInjector::class);        
-    })->create();
-```
-
-
