@@ -78,7 +78,6 @@ class DocsBuild extends Command
         $this->deleteMdFilesExceptIndex($docsDir);
         $builder = new VitePressConfigHelper();
         $builder->nav('Home', '/')
-            ->nav('Api', '/Menu/add')
             ->sidebar('Api');
         $isFirst = false;
         foreach ($apis as $api) {
