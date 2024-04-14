@@ -49,3 +49,41 @@ You can generate API documentation based on the annotations we provide:
 php artisan docs:build
 php artisan docs:run
 ```
+
+## Middlewares
+
+We provide implementations of some useful middleware, such as `#[RequestBody]`. An example is as follows:
+```php
+use Zenith\LaravelPlus\Attributes\Requests\RequestBody;
+use Zenith\LaravelPlus\Bean;
+
+class RegisterParams extends Bean
+{
+    protected string $username;
+    
+    protected string $password;
+   
+    public function getUsername(): string
+    {
+        return $this->username; 
+    }
+}
+class Controller
+{
+    public function register(#[RequestBody] RegisterParams $params)
+    {
+        dump($params->getUsername());
+    }
+}
+```
+You need to register the middleware for it to take effect:
+```php
+use Zenith\LaravelPlus\Middlewares\RequestBodyInjector;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(RequestBodyInjector::class);        
+    })->create();
+```
+
+
