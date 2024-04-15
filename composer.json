@@ -18,5 +18,12 @@
             "email": "happy@hacking.icu"
         }
     ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zenith\\LaravelPlus\\Providers\\LogicServiceProvider"
+            ]
+        }
+    },
     "minimum-stability": "dev"
 }
