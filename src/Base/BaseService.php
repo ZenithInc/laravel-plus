@@ -1,0 +1,28 @@
+<?php
+declare(strict_types=1);
+
+namespace Zenith\LaravelPlus\Base;
+
+use Illuminate\Contracts\Container\BindingResolutionException;
+use ReflectionClass;
+use Zenith\LaravelPlus\Attributes\Autowired;
+
+class BaseService
+{
+    /**
+     * @throws BindingResolutionException
+     */
+    public function __construct()
+    {
+        $reflectionClazz = new ReflectionClass($this);
+        foreach ($reflectionClazz->getProperties() as $property) {
+            $autowired = $property->getAttributes(Autowired::class);
+            if (!$autowired) {
+                continue;
+            }
+            /** @var \ReflectionAttribute $autowired */
+            $clazz = $autowired->newInstance()->value;
+            $property->setValue($this, app()->make($clazz));
+        }
+    }
+}
