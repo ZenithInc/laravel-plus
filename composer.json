@@ -21,7 +21,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Zenith\\LaravelPlus\\Providers\\LogicServiceProvider"
+                "Zenith\\LaravelPlus\\Providers\\LogicServiceProvider",
+                "Zenith\\LaravelPlus\\Providers\\ServiceServiceProvider"
             ]
         }
     },

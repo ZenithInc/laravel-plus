@@ -10,7 +10,7 @@ use ReflectionClass;
 use ReflectionException;
 use Zenith\LaravelPlus\Helpers\NamespaceHelper;
 
-class LogicServiceProvider extends ServiceProvider
+class ServiceServiceProvider extends ServiceProvider
 {
 
     /**
@@ -18,15 +18,12 @@ class LogicServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $scanDir = app()->path('/Logic/Impls');
+        $scanDir = app()->path('/Services');
         $files = $this->scanForFiles($scanDir);
         foreach ($files as $file) {
             $ns = NamespaceHelper::path2namespace($file);
             $reflectionClazz = new ReflectionClass($ns);
-            $interfaces = $reflectionClazz->getInterfaceNames();
-            foreach ($interfaces as $interfaceClazz) {
-                app()->singleton($interfaceClazz, fn() => new $ns());
-            }
+            app()->singleton($reflectionClazz->getName(), fn() => new $ns());
         }
     }
 
@@ -36,7 +33,7 @@ class LogicServiceProvider extends ServiceProvider
         $recursiveIterator = new RecursiveIteratorIterator($directoryIterator);
         $files = [];
         foreach ($recursiveIterator as $file) {
-            if ($file->isFile() && str_contains($file->getFilename(), 'Logic.php')) {
+            if ($file->isFile() && str_contains($file->getFilename(), 'Service.php')) {
                 $files[] = $file->getPathname();
             }
         }
