@@ -12,7 +12,7 @@ use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
-use Zenith\LaravelPlus\Attributes\Routes\Alias;
+use Zenith\LaravelPlus\Attributes\Alias;
 use Zenith\LaravelPlus\Attributes\Routes\DeleteMapping;
 use Zenith\LaravelPlus\Attributes\Routes\GetMapping;
 use Zenith\LaravelPlus\Attributes\Routes\PostMapping;

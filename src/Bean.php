@@ -6,21 +6,29 @@ namespace Zenith\LaravelPlus;
 use ArrayAccess;
 use Illuminate\Contracts\Support\Arrayable;
 use Override;
+use ReflectionAttribute;
+use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
 use ReturnTypeWillChange;
+use Zenith\LaravelPlus\Attributes\Alias;
 
 /**
  * Class Bean
  * Implements Arrayable and ArrayAccess interfaces
  */
-class Bean implements Arrayable, ArrayAccess
+class Bean implements Arrayable
 {
     /**
      * @var array
-     *            Holds raw data
+     * Holds raw data
      */
-    protected array $_RAW = [];
+    private array $_RAW = [];
+
+    /**
+     * @var array
+     */
+    private array $_alias = [];
 
     /**
      * @throws ReflectionException
@@ -37,12 +45,23 @@ class Bean implements Arrayable, ArrayAccess
      */
     public function init(array $data): self
     {
-        // Set default property and value.
-        foreach ($this as $key => $value) {
-            $key != '_RAW' && $this->_RAW[$key] = $value;
+        // initializes alias
+        $reflectionClass = new ReflectionClass($this);
+        $reflectionProperties = $reflectionClass->getProperties();
+        foreach ($reflectionProperties as $reflectionProperty) {
+            $alias = $this->getAlias($reflectionProperty);
+            if ($alias) {
+                $this->_alias[$reflectionProperty->getName()] = $alias;
+            }
         }
         foreach ($data as $key => $value) {
-            if (! property_exists($this, $key)) {
+            // Check alias
+            foreach ($this->_alias as $k => $v) {
+                if ($v === $key) {
+                    $key = $k;
+                }
+            }
+            if (!property_exists($this, $key)) {
                 continue;
             }
             // Check field type, if type is bean, init it.
@@ -63,6 +82,14 @@ class Bean implements Arrayable, ArrayAccess
         return $this;
     }
 
+    private function getAlias(ReflectionProperty $reflectionProperty): ?string
+    {
+        $attributes = collect($reflectionProperty->getAttributes());
+        $aliasAttribute = $attributes->filter(fn (ReflectionAttribute $attribute) => $attribute->getName() === Alias::class)->first();
+        /** @var ReflectionAttribute $aliasAttribute */
+        return $aliasAttribute?->newInstance()->value;
+    }
+
     /**
      * Convert the Bean to array
      *
@@ -76,54 +103,18 @@ class Bean implements Arrayable, ArrayAccess
             if (is_object($value) && method_exists($value, 'toArray')) {
                 $value = $value->toArray();
             }
-            $arr[$key] = $value;
+            $arr[$this->_alias[$key] ?? $key] = $value;
         }
 
         return $arr;
     }
 
     /**
-     * Set offset value
-     */
-    public function offsetSet(mixed $offset, mixed $value): void
-    {
-        if (is_null($offset)) {
-            $this->_RAW[] = $value;
-        } else {
-            $this->_RAW[$offset] = $value;
-        }
-    }
-
-    /**
-     * Check if offset exists
-     */
-    public function offsetExists(mixed $offset): bool
-    {
-        return isset($this->_RAW[$offset]);
-    }
-
-    /**
-     * Unset offset
-     */
-    public function offsetUnset(mixed $offset): void
-    {
-        unset($this->_RAW[$offset]);
-    }
-
-    /**
-     * Get offset value
-     */
-    #[ReturnTypeWillChange]
-    public function offsetGet(mixed $offset): mixed
-    {
-        return $this->_RAW[$offset] ?? null;
-    }
-
-    /**
      * Convert the Bean to JSON
+     * @throws ReflectionException
      */
     public function toJson(): string
     {
-        return json_encode($this->_RAW);
+        return json_encode($this->toArray());
     }
 }
