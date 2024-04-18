@@ -3,15 +3,14 @@ declare(strict_types=1);
 
 namespace Zenith\LaravelPlus;
 
-use ArrayAccess;
 use Illuminate\Contracts\Support\Arrayable;
 use Override;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
-use ReturnTypeWillChange;
 use Zenith\LaravelPlus\Attributes\Alias;
+use Zenith\LaravelPlus\Attributes\BeanList;
 
 /**
  * Class Bean
@@ -74,12 +73,28 @@ class Bean implements Arrayable
 
                 continue;
             }
-
-            $this->$key = $value;
+            if (!is_array($value) || !$this->initBeanList($reflectProperty, $value)) {
+                $this->$key = $value;
+            }
             $this->_RAW[$key] = $value;
         }
 
         return $this;
+    }
+
+    private function initBeanList(ReflectionProperty $reflectProperty, mixed $items): bool
+    {
+         $attributes = $reflectProperty->getAttributes(BeanList::class);
+         if (!$attributes) {
+             return false;
+         }
+         $clazz = $attributes[0]->newInstance()->value;
+         $beanList = [];
+         foreach ($items as $item) {
+             $beanList[] = new $clazz($item);
+         }
+         $reflectProperty->setValue($this, $beanList);
+         return true;
     }
 
     private function getAlias(ReflectionProperty $reflectionProperty): ?string
