@@ -12,6 +12,9 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class Param
 {
+
+    public const string DEFAULT_MESSAGE = 'The :attribute field is error';
+
     /**
      * Param constructor.
      * Constructs a Param object.
@@ -24,7 +27,7 @@ class Param
     public function __construct(
         public string $key,
         public string $rule,
-        public string $message
+        public string $message = self::DEFAULT_MESSAGE
     )
     {
     }
