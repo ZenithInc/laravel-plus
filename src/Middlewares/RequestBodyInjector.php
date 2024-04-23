@@ -37,7 +37,7 @@ class RequestBodyInjector
         foreach ($parameters as $parameter) {
             $attributes = collect($parameter->getAttributes(RequestBody::class));
             if ($attributes->isEmpty()) {
-                return $next($request);
+                continue;
             }
             $this->addBodyToRequestIfBean($request, $parameter);
         }
