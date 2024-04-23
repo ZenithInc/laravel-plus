@@ -9,8 +9,10 @@ use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
+use Throwable;
 use Zenith\LaravelPlus\Attributes\Alias;
 use Zenith\LaravelPlus\Attributes\BeanList;
+use Zenith\LaravelPlus\Attributes\TypeConverter;
 
 /**
  * Class Bean
@@ -65,6 +67,7 @@ class Bean implements Arrayable
             }
             // Check field type, if type is bean, init it.
             $reflectProperty = new ReflectionProperty($this, $key);
+            $value = $this->covertValueType($reflectProperty, $value);
             if (is_array($value) && is_subclass_of($reflectProperty->getType()->getName(), Bean::class)) {
                 $bean = (new ($reflectProperty->getType()->getName()));
                 $bean->init($value);
@@ -80,6 +83,23 @@ class Bean implements Arrayable
         }
 
         return $this;
+    }
+
+    private function covertValueType(ReflectionProperty $reflectionProperty, mixed $value): mixed
+    {
+        $attributes = $reflectionProperty->getAttributes(TypeConverter::class);
+        if (!$attributes) {
+            return $value;
+        }
+        $functionOrClass = $attributes[0]->newInstance()->value;
+        if (function_exists($functionOrClass)) {
+            return $functionOrClass($value);
+        }
+        try {
+            return (new $functionOrClass())->convert($value);
+        } catch (Throwable $exception) {
+            return $value;
+        }
     }
 
     private function initBeanList(ReflectionProperty $reflectProperty, mixed $items): bool
@@ -131,5 +151,18 @@ class Bean implements Arrayable
     public function toJson(): string
     {
         return json_encode($this->toArray());
+    }
+
+    /**
+     * Sets the value of a dynamic property.
+     *
+     * @param string $name The name of the property to set.
+     * @param mixed $value The value to set for the property.
+     * @return void
+     */
+    public function __set(string $name, mixed $value): void
+    {
+        $this->$name = $value;
+        $this->_RAW[$name] = $value;
     }
 }
