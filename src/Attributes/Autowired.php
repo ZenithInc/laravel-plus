@@ -9,7 +9,4 @@ use Attribute;
 class Autowired
 {
 
-    public function __construct(public string $value)
-    {
-    }
 }

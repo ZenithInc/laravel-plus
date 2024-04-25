@@ -19,7 +19,7 @@ class RepositoryServiceProvider extends ServiceProvider
     public function register(): void
     {
         $scanDir = app()->path('/Repositories/Impls');
-        $files = $this->scanForFiles($scanDir);
+        $files = $this->scanClasses($scanDir);
         foreach ($files as $file) {
             $ns = NamespaceHelper::path2namespace($file);
             $reflectionClazz = new ReflectionClass($ns);
@@ -30,18 +30,19 @@ class RepositoryServiceProvider extends ServiceProvider
         }
     }
 
-    public static function scanForFiles(string $basePath): array
+    public function scanClasses(string $basePath): array
     {
         $directoryIterator = new RecursiveDirectoryIterator($basePath);
         $recursiveIterator = new RecursiveIteratorIterator($directoryIterator);
-        $files = [];
+        $classes = [];
         foreach ($recursiveIterator as $file) {
-            if ($file->isFile() && str_contains($file->getFilename(), 'Impl.php')) {
-                $files[] = $file->getPathname();
+            if ($file->isFile() && str_contains($file->getFilename(), '.php')) {
+                $clazz = NamespaceHelper::path2namespace($file->getPathname());
+                $classes[] = $clazz;
             }
         }
 
-        return $files;
+        return $classes;
     }
 
 }

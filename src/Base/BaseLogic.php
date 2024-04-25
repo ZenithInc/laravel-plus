@@ -21,9 +21,7 @@ class BaseLogic
             if (!$autowired) {
                 continue;
             }
-            /** @var ReflectionAttribute $autowired */
-            $clazz = ($autowired[0])->newInstance()->value;
-            $property->setValue($this, app()->make($clazz));
+            $property->setValue($this, app()->make($property->getType()));
         }
     }
 }
