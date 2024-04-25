@@ -19,13 +19,12 @@ class RepositoryServiceProvider extends ServiceProvider
     public function register(): void
     {
         $scanDir = app()->path('/Repositories/Impls');
-        $files = $this->scanClasses($scanDir);
-        foreach ($files as $file) {
-            $ns = NamespaceHelper::path2namespace($file);
-            $reflectionClazz = new ReflectionClass($ns);
+        $classes = $this->scanClasses($scanDir);
+        foreach ($classes as $clazz) {
+            $reflectionClazz = new ReflectionClass($clazz);
             $interfaces = $reflectionClazz->getInterfaceNames();
             foreach ($interfaces as $interfaceClazz) {
-                app()->singleton($interfaceClazz, fn() => new $ns());
+                app()->singleton($interfaceClazz, fn() => $reflectionClazz->newInstance());
             }
         }
     }
