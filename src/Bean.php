@@ -77,22 +77,22 @@ class Bean implements Arrayable
                 continue;
             }
             // Check field type, if type is bean, init it.
-            $reflectProperty = new ReflectionProperty($this, $key);
-            $value = $this->covertValueType($reflectProperty, $value);
-            if (is_array($value) && is_subclass_of($reflectProperty->getType()->getName(), Bean::class)) {
-                $bean = (new ($reflectProperty->getType()->getName()));
+            $reflectionProperty = new ReflectionProperty($this, $key);
+            $value = $this->covertValueType($reflectionProperty, $value);
+            if (is_array($value) && is_subclass_of($reflectionProperty->getType()->getName(), Bean::class)) {
+                $bean = (new ($reflectionProperty->getType()->getName()));
                 $bean->init($value);
                 $this->$key = $bean;
-                $this->_RAW[$key] = $value;
-
+                $this->_RAW[$key] = $bean;
                 continue;
             }
-            if (!is_array($value) || !$this->initBeanList($reflectProperty, $value)) {
-                $this->$key = $value;
+            if (is_array($value) && $this->initBeanList($reflectionProperty, $value)) {
+                $this->$key = $reflectionProperty->getValue($this);
+                $this->_RAW[$key] = $this->$key;
+                continue;
             }
-            $this->_RAW[$key] = $value;
+            $this->_RAW[$key] = $this->$key = $value;
         }
-
         return $this;
     }
 
@@ -115,17 +115,17 @@ class Bean implements Arrayable
 
     private function initBeanList(ReflectionProperty $reflectProperty, mixed $items): bool
     {
-         $attributes = $reflectProperty->getAttributes(BeanList::class);
-         if (!$attributes) {
-             return false;
-         }
-         $clazz = $attributes[0]->newInstance()->value;
-         $beanList = [];
-         foreach ($items as $item) {
-             $beanList[] = new $clazz($item);
-         }
-         $reflectProperty->setValue($this, $beanList);
-         return true;
+        $attributes = $reflectProperty->getAttributes(BeanList::class);
+        if (!$attributes) {
+            return false;
+        }
+        $clazz = $attributes[0]->newInstance()->value;
+        $beanList = [];
+        foreach ($items as $item) {
+            $beanList[] = new $clazz($item);
+        }
+        $reflectProperty->setValue($this, $beanList);
+        return true;
     }
 
     private function getAlias(ReflectionProperty $reflectionProperty): ?string
@@ -148,6 +148,13 @@ class Bean implements Arrayable
         foreach ($this->_RAW as $key => $value) {
             if (is_object($value) && method_exists($value, 'toArray')) {
                 $value = $value->toArray();
+            }
+            if (is_array($value) && is_subclass_of($value[0], Bean::class)) {
+                $values = [];
+                foreach ($value as $item) {
+                    $values[] = $item->toArray();
+                };
+                $value = $values;
             }
             $arr[$this->_alias[$key] ?? $key] = $value;
         }
