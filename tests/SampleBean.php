@@ -9,6 +9,8 @@ use Zenith\LaravelPlus\Bean;
 class SampleBean extends Bean
 {
 
+    protected array $_skip = ['pivot'];
+
     protected string $username;
 
     #[Alias(value: 'latest_login_ip')]

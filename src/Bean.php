@@ -32,6 +32,11 @@ class Bean implements Arrayable
     private array $_alias = [];
 
     /**
+     * @var array
+     */
+    protected array $_skip = [];
+
+    /**
      * @throws ReflectionException
      */
     public function __construct(array $data = [])
@@ -50,12 +55,18 @@ class Bean implements Arrayable
         $reflectionClass = new ReflectionClass($this);
         $reflectionProperties = $reflectionClass->getProperties();
         foreach ($reflectionProperties as $reflectionProperty) {
+            if (in_array($reflectionProperty->getName(), $this->_skip, true)) {
+                continue;
+            }
             $alias = $this->getAlias($reflectionProperty);
             if ($alias) {
                 $this->_alias[$reflectionProperty->getName()] = $alias;
             }
         }
         foreach ($data as $key => $value) {
+            if (in_array($key, $this->_skip, true)) {
+                continue;
+            }
             // Check alias
             foreach ($this->_alias as $k => $v) {
                 if ($v === $key) {
@@ -162,6 +173,9 @@ class Bean implements Arrayable
      */
     public function __set(string $name, mixed $value): void
     {
+        if (in_array($name, $this->_skip, true)) {
+            return;
+        }
         $this->$name = $value;
         $this->_RAW[$name] = $value;
     }

@@ -10,6 +10,7 @@ beforeEach(function () {
         ],
         'page' => '1',
         'status' => 'VALID',
+        'pivot' => 'skip_property',
     ];
     $this->verifyDataWithArray = array_merge($this->data, [
         'page' => 1,
@@ -23,6 +24,7 @@ beforeEach(function () {
 
 it('initializes with data', function () {
     $arr = $this->bean->toArray();
+    unset($this->verifyDataWithArray['pivot']);
     foreach ($this->verifyDataWithArray as $key => $value) {
         expect($arr[$key])->toBe($value);
     }
@@ -30,6 +32,7 @@ it('initializes with data', function () {
 
 it('converts to JSON', function () {
     $json = json_decode($this->bean->toJson(), true);
+    unset($this->verifyDataWithJson['pivot']);
     foreach ($this->verifyDataWithJson as $key => $value) {
         expect($json[$key])->toBe($value);
     }
@@ -56,4 +59,9 @@ it('setter', function () {
     expect($arr['page'])->toBe(2);
     $json = json_decode($this->bean->toJson(), true);
     expect($json['page'])->toBe(2);
+});
+
+it('skip property', function () {
+    $arr = $this->bean->toArray();
+    expect(!isset($arr['pivot']))->toBe(true);
 });
