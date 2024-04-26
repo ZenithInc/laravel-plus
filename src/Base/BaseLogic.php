@@ -21,7 +21,7 @@ class BaseLogic
             if (!$autowired) {
                 continue;
             }
-            $property->setValue($this, app()->make($property->getType()));
+            $property->setValue($this, app()->make($property->getType()->getName()));
         }
     }
 }
