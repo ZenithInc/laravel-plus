@@ -1,5 +1,7 @@
 <?php
 
+use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
+
 beforeEach(function () {
     $this->data = [
         'username' => 'bob',
@@ -82,3 +84,7 @@ it('test __call method2', function () {
     $this->bean->setUsername('bob')->setAge(10);
     expect($this->bean->getAge())->toBe(10);
 });
+
+it ('test non-existing property', function () {
+    $this->bean->setNotExistsProperty("undefined");
+})->throws(PropertyNotFoundException::class);

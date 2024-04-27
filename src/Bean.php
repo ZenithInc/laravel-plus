@@ -13,6 +13,7 @@ use Throwable;
 use Zenith\LaravelPlus\Attributes\Alias;
 use Zenith\LaravelPlus\Attributes\BeanList;
 use Zenith\LaravelPlus\Attributes\TypeConverter;
+use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
 
 /**
  * Class Bean
@@ -55,10 +56,16 @@ class Bean implements Arrayable
         $reflectionClass = new ReflectionClass($this);
         $reflectionProperties = $reflectionClass->getProperties();
         foreach ($reflectionProperties as $reflectionProperty) {
+            if (str_starts_with($reflectionProperty->getName(), '_')) {
+                continue;
+            }
             if (in_array($reflectionProperty->getName(), $this->_skip, true)) {
                 continue;
             }
             $alias = $this->getAlias($reflectionProperty);
+            if ($reflectionProperty->isInitialized($this)) {
+                $this->_RAW[$reflectionProperty->getName()] = $reflectionProperty->getValue($this);
+            }
             if ($alias) {
                 $this->_alias[$reflectionProperty->getName()] = $alias;
             }
@@ -192,13 +199,19 @@ class Bean implements Arrayable
         return $this->_RAW[$name];
     }
 
+    /**
+     * @throws PropertyNotFoundException
+     */
     public function __call(string $name, array $arguments)
     {
         if (str_starts_with($name, 'set')) {
             $property = lcfirst(substr($name, strlen('set')));
-            property_exists($this, $property) && $this->$property = $arguments[0];
-            $this->_RAW[$property] = $this->$property;
-            return $this;
+            if (property_exists($this, $property)) {
+                $this->$property = $arguments[0];
+                $this->_RAW[$property] = $arguments[0];
+                return $this;
+            }
+            throw new PropertyNotFoundException("The property '{$property}' does not exist.");
         }
         if (str_starts_with($name, 'get')) {
             $property = lcfirst(substr($name, strlen('get')));
