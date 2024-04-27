@@ -30,15 +30,4 @@ class SampleBean extends Bean
 
     #[TypeConverter(value: TestEnumConverter::class)]
     protected TestEnum $status;
-
-    public function getPage(): int
-    {
-        return $this->page;
-    }
-
-    public function getStatus(): TestEnum
-    {
-        return $this->status;
-    }
-
 }

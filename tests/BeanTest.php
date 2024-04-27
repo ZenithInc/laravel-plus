@@ -77,3 +77,8 @@ it('test __call method', function () {
     expect($arr['age'])->toBe(10)
         ->and($this->bean->getAge())->toBe(10);
 });
+
+it('test __call method2', function () {
+    $this->bean->setUsername('bob')->setAge(10);
+    expect($this->bean->getAge())->toBe(10);
+});

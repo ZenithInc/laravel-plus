@@ -196,14 +196,14 @@ class Bean implements Arrayable
     {
         if (str_starts_with($name, 'set')) {
             $property = lcfirst(substr($name, strlen('set')));
-            $this->$property = $arguments[0];
+            property_exists($this, $property) && $this->$property = $arguments[0];
             $this->_RAW[$property] = $this->$property;
-            return new static;
+            return $this;
         }
         if (str_starts_with($name, 'get')) {
             $property = lcfirst(substr($name, strlen('get')));
             return $this->_RAW[$property];
         }
-        return null;
+        return $this;
     }
 }
