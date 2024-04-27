@@ -192,13 +192,13 @@ class Bean implements Arrayable
         return $this->_RAW[$name];
     }
 
-    public function __call(string $name, array $arguments): mixed
+    public function __call(string $name, array $arguments)
     {
         if (str_starts_with($name, 'set')) {
             $property = lcfirst(substr($name, strlen('set')));
             $this->$property = $arguments[0];
             $this->_RAW[$property] = $this->$property;
-            return null;
+            return new static;
         }
         if (str_starts_with($name, 'get')) {
             $property = lcfirst(substr($name, strlen('get')));
