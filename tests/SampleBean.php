@@ -16,6 +16,8 @@ class SampleBean extends Bean
     #[Alias(value: 'latest_login_ip')]
     public string $latestLoginIp;
 
+    protected int $age;
+
     /**
      * @var BookBean[]
      * Holds an array of books.
@@ -38,4 +40,5 @@ class SampleBean extends Bean
     {
         return $this->status;
     }
+
 }

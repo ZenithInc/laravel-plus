@@ -52,7 +52,7 @@ it('convert type with class', function () {
     expect($this->bean->getStatus())->toBe(TestEnum::VALID);
 });
 
-it('setter', function () {
+it('test __set method', function () {
     $this->bean->page = 2;
     expect($this->bean->getPage())->toBe(2);
     $arr = $this->bean->toArray();
@@ -61,7 +61,19 @@ it('setter', function () {
     expect($json['page'])->toBe(2);
 });
 
+it('test __get method', function () {
+    $this->bean->age = 10;
+    expect($this->bean->age)->toBe(10);
+});
+
 it('skip property', function () {
     $arr = $this->bean->toArray();
     expect(!isset($arr['pivot']))->toBe(true);
+});
+
+it('test __call method', function () {
+    $this->bean->setAge(10);
+    $arr = $this->bean->toArray();
+    expect($arr['age'])->toBe(10)
+        ->and($this->bean->getAge())->toBe(10);
 });
