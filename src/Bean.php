@@ -219,4 +219,21 @@ class Bean implements Arrayable
         }
         return $this;
     }
+
+    public function equals(Bean $bean): bool
+    {
+        foreach ($this as $key => $value) {
+            if ($value !== $bean->$key) {
+                return false;
+            }
+        }
+
+        foreach ($bean as $key => $value) {
+            if ($value !== $this->$key) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
