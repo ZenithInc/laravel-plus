@@ -220,16 +220,15 @@ class Bean implements Arrayable
         return $this;
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function equals(Bean $bean): bool
     {
-        foreach ($this as $key => $value) {
-            if ($value !== $bean->$key) {
-                return false;
-            }
-        }
-
-        foreach ($bean as $key => $value) {
-            if ($value !== $this->$key) {
+        $firstBean = $bean->toArray();
+        $secondBean = $this->toArray();
+        foreach ($firstBean as $key => $value) {
+            if ($value !== $secondBean[$key]) {
                 return false;
             }
         }
