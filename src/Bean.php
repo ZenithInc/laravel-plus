@@ -156,7 +156,7 @@ class Bean implements Arrayable
             if (is_object($value) && method_exists($value, 'toArray')) {
                 $value = $value->toArray();
             }
-            if (is_array($value) && is_subclass_of($value[0], Bean::class)) {
+            if (is_array($value) && isset($value[0]) && is_subclass_of($value[0], Bean::class)) {
                 $values = [];
                 foreach ($value as $item) {
                     $values[] = $item->toArray();

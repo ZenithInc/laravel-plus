@@ -32,6 +32,11 @@ it('initializes with data', function () {
     }
 });
 
+it ('init empty bean list', function () {
+    $arr = (new SampleBean2(['username' => 'bob', 'subs' => []]))->toArray();
+    expect($arr)->toBeArray();
+});
+
 it('converts to JSON', function () {
     $json = json_decode($this->bean->toJson(), true);
     unset($this->verifyDataWithJson['pivot']);
