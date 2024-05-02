@@ -54,10 +54,9 @@ class RequestBodyInjector
     private function addBodyToRequestIfBean(Request $request, ReflectionParameter $parameter): void
     {
         $params = $request->input();
-        $type = new ($parameter->getType()->getName());
-        if ($type instanceof Bean) {
-            $body = call_user_func([$type, 'init'], $params);
-            app()->instance($parameter->getType()->getName(), $body);
+        $bean = new ($parameter->getType()->getName())($params);
+        if ($bean instanceof Bean) {
+            app()->instance($parameter->getType()->getName(), $bean);
         }
     }
 }
