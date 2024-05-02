@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Zenith\LaravelPlus;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Str;
 use Override;
-use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
@@ -21,126 +21,93 @@ use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
  */
 class Bean implements Arrayable
 {
-    /**
-     * @var array
-     * Holds raw data
-     */
-    private array $_RAW = [];
 
-    /**
-     * @var array
-     */
-    private array $_alias = [];
-
-    /**
-     * @var array
-     */
     protected array $_skip = [];
 
-    /**
-     * @throws ReflectionException
-     */
+    private array $_meta = [];
+
     public function __construct(array $data = [])
     {
+        $this->collectMetaInfo();
         $this->init($data);
+        file_put_contents('test.json', json_encode($this->_meta));
+
     }
 
-    /**
-     * Initialize the Bean
-     *
-     * @throws ReflectionException
-     */
-    public function init(array $data): self
+    private function collectMetaInfo(): void
     {
-        // initializes alias
         $reflectionClass = new ReflectionClass($this);
-        $reflectionProperties = $reflectionClass->getProperties();
-        foreach ($reflectionProperties as $reflectionProperty) {
-            if (str_starts_with($reflectionProperty->getName(), '_')) {
+        $properties = $reflectionClass->getProperties(ReflectionProperty::IS_PROTECTED);
+        foreach ($properties as $property) {
+            if (str_starts_with($property->getName(), '_') || in_array($property->getName(), $this->_skip)) {
                 continue;
             }
-            if (in_array($reflectionProperty->getName(), $this->_skip, true)) {
-                continue;
-            }
-            $alias = $this->getAlias($reflectionProperty);
-            if ($reflectionProperty->isInitialized($this)) {
-                $this->_RAW[$reflectionProperty->getName()] = $reflectionProperty->getValue($this);
-            }
-            if ($alias) {
-                $this->_alias[$reflectionProperty->getName()] = $alias;
-            }
-        }
-        foreach ($data as $key => $value) {
-            if (in_array($key, $this->_skip, true)) {
-                continue;
-            }
-            // Check alias
-            foreach ($this->_alias as $k => $v) {
-                if ($v === $key) {
-                    $key = $k;
+            $attributes = $property->getAttributes();
+            $alias = $converter = $beanList = null;
+            foreach ($attributes as $attribute) {
+                if ($attribute->getName() === Alias::class) {
+                    $alias = $attribute->newInstance()->value;
+                }
+                if ($attribute->getName() === TypeConverter::class) {
+                    $converter = $attribute->newInstance()->value;
+                }
+                if ($attribute->getName() === BeanList::class) {
+                    $beanList = $attribute->newInstance()->value;
                 }
             }
-            if (!property_exists($this, $key)) {
-                continue;
-            }
-            // Check field type, if type is bean, init it.
-            $reflectionProperty = new ReflectionProperty($this, $key);
-            $value = $this->covertValueType($reflectionProperty, $value);
-            if (is_array($value) && is_subclass_of($reflectionProperty->getType()->getName(), Bean::class)) {
-                $bean = (new ($reflectionProperty->getType()->getName()));
-                $bean->init($value);
-                $this->$key = $bean;
-                $this->_RAW[$key] = $bean;
-                continue;
-            }
-            if (is_array($value) && $this->initBeanList($reflectionProperty, $value)) {
-                $this->$key = $reflectionProperty->getValue($this);
-                $this->_RAW[$key] = $this->$key;
-                continue;
-            }
-            $this->_RAW[$key] = $this->$key = $value;
+            $snake = $alias !== null ? Str::snake($alias) : Str::snake($property->getName());
+
+            $this->_meta[$property->getName()] = [
+                'type' => $property->getType()?->getName(),
+                'alias' => $alias,
+                'snake' => $snake,
+                'reflectProperty' => $property,
+                'converter' => $converter,
+                'beanList' => $beanList,
+            ];
         }
-        return $this;
     }
 
-    private function covertValueType(ReflectionProperty $reflectionProperty, mixed $value): mixed
+
+    private function init(array $data): void
     {
-        $attributes = $reflectionProperty->getAttributes(TypeConverter::class);
-        if (!$attributes) {
-            return $value;
+        foreach ($this->_meta as $propertyName => $meta) {
+            $key = $meta['alias'] ?? $propertyName;
+            if (!isset($data[$key])) {
+                continue;
+            }
+            $value = $data[$key];
+            if ($meta['converter'] !== null) {
+                $value = $this->convertValue($meta['converter'], $value);
+            }
+            if ($meta['beanList'] !== null) {
+                $value = $this->convertBeanList($meta['beanList'], $value);
+            }
+            $meta['reflectProperty']->setValue($this, $value);
+            $this->_meta[$propertyName]['value'] = $value;
         }
-        $functionOrClass = $attributes[0]->newInstance()->value;
-        if (function_exists($functionOrClass)) {
-            return $functionOrClass($value);
+    }
+
+
+    private function convertValue(string $convertor,  mixed $value): mixed
+    {
+        if (function_exists($convertor)) {
+            return $convertor($value);
         }
         try {
-            return (new $functionOrClass())->convert($value);
+            return (new $convertor())->convert($value);
         } catch (Throwable $exception) {
             return $value;
         }
     }
 
-    private function initBeanList(ReflectionProperty $reflectProperty, mixed $items): bool
+    private function convertBeanList(string $clazz, array $items): array
     {
-        $attributes = $reflectProperty->getAttributes(BeanList::class);
-        if (!$attributes) {
-            return false;
-        }
-        $clazz = $attributes[0]->newInstance()->value;
         $beanList = [];
         foreach ($items as $item) {
             $beanList[] = new $clazz($item);
         }
-        $reflectProperty->setValue($this, $beanList);
-        return true;
-    }
-
-    private function getAlias(ReflectionProperty $reflectionProperty): ?string
-    {
-        $attributes = collect($reflectionProperty->getAttributes());
-        $aliasAttribute = $attributes->filter(fn (ReflectionAttribute $attribute) => $attribute->getName() === Alias::class)->first();
-        /** @var ReflectionAttribute $aliasAttribute */
-        return $aliasAttribute?->newInstance()->value;
+        return $beanList;
     }
 
     /**
@@ -149,10 +116,11 @@ class Bean implements Arrayable
      * @throws ReflectionException
      */
     #[Override]
-    public function toArray(): array
+    public function toArray(bool $usingSnakeCase = true): array
     {
         $arr = [];
-        foreach ($this->_RAW as $key => $value) {
+        foreach ($this->_meta as $propertyName => $meta) {
+            $value = $meta['value'];
             if (is_object($value) && method_exists($value, 'toArray')) {
                 $value = $value->toArray();
             }
@@ -163,7 +131,9 @@ class Bean implements Arrayable
                 };
                 $value = $values;
             }
-            $arr[$this->_alias[$key] ?? $key] = $value;
+
+            $key = $usingSnakeCase ? $meta['snake'] : $propertyName;
+            $arr[$key] = $value;
         }
 
         return $arr;
@@ -173,30 +143,9 @@ class Bean implements Arrayable
      * Convert the Bean to JSON
      * @throws ReflectionException
      */
-    public function toJson(): string
+    public function toJson(bool $usingSnakeCase = true): string
     {
-        return json_encode($this->toArray());
-    }
-
-    /**
-     * Sets the value of a dynamic property.
-     *
-     * @param string $name The name of the property to set.
-     * @param mixed $value The value to set for the property.
-     * @return void
-     */
-    public function __set(string $name, mixed $value): void
-    {
-        if (in_array($name, $this->_skip, true)) {
-            return;
-        }
-        $this->$name = $value;
-        $this->_RAW[$name] = $value;
-    }
-
-    public function __get(string $name)
-    {
-        return $this->_RAW[$name];
+        return json_encode($this->toArray($usingSnakeCase));
     }
 
     /**
@@ -207,15 +156,15 @@ class Bean implements Arrayable
         if (str_starts_with($name, 'set')) {
             $property = lcfirst(substr($name, strlen('set')));
             if (property_exists($this, $property)) {
-                $this->$property = $arguments[0];
-                $this->_RAW[$property] = $arguments[0];
+                $this->_meta[$property]['reflectProperty']->setValue($this, $arguments[0]);
+                $this->_meta[$property]['value'] = $arguments[0];
                 return $this;
             }
             throw new PropertyNotFoundException("The property '{$property}' does not exist.");
         }
         if (str_starts_with($name, 'get')) {
             $property = lcfirst(substr($name, strlen('get')));
-            return $this->_RAW[$property];
+            return $this->_meta[$property]['value'];
         }
         return $this;
     }

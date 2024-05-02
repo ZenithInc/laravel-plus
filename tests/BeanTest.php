@@ -1,95 +1,75 @@
-<?php
+<?php /** @noinspection PhpUndefinedMethodInspection */
 
+
+use Zenith\LaravelPlus\Attributes\BeanList;
+use Zenith\LaravelPlus\Bean;
 use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
 
-beforeEach(function () {
-    $this->data = [
-        'username' => 'bob',
-        'latest_login_ip' => '127.0.0.1',
-        'books' => [
-            ['name' => 'Programming PHP:Creating Dynamic Web Pages'],
-            ['name' => 'Learning PHP, MySQL,Javascript,CSS && HTML5'],
-        ],
-        'page' => '1',
-        'status' => 'VALID',
-        'pivot' => 'skip_property',
-    ];
-    $this->verifyDataWithArray = array_merge($this->data, [
-        'page' => 1,
-        'status' => TestEnum::VALID,
-    ]);
-    $this->verifyDataWithJson = array_merge($this->data, [
-        'page' => 1,
-    ]);
-    $this->bean = new SampleBean($this->data);
-});
-
-it('initializes with data', function () {
-    $arr = $this->bean->toArray();
-    unset($this->verifyDataWithArray['pivot']);
-    foreach ($this->verifyDataWithArray as $key => $value) {
-        expect($arr[$key])->toBe($value);
-    }
-});
-
-it ('init empty bean list', function () {
-    $arr = (new SampleBean2(['username' => 'bob', 'subs' => []]))->toArray();
-    expect($arr)->toBeArray();
+it('case 1', function () {
+    $testBean = new class(['username' => 'bob']) extends Bean {
+        protected string $username;
+    };
+    expect($testBean->getUsername())->toBe('bob');
 });
 
 it('converts to JSON', function () {
-    $json = json_decode($this->bean->toJson(), true);
-    unset($this->verifyDataWithJson['pivot']);
-    foreach ($this->verifyDataWithJson as $key => $value) {
-        expect($json[$key])->toBe($value);
-    }
+    $testBean = new class(['username' => 'bob', 'password' => 'passW0rd']) extends Bean {
+        protected string $username;
+        protected string $password;
+    };
+    $arr = json_decode($testBean->toJson(), true);
+    expect($arr['username'])->toBe('bob')->and($arr['password'])->toBe('passW0rd');
 });
 
 it('initializes with BeanList', function () {
-    foreach ($this->bean->books as $key => $book) {
-        expect($book->getName())->toBe($this->data['books'][$key]['name']);
-    }
+    $wrapper = new Wrapper([
+        'items' => [
+            ['name' => 'bob'],
+            ['name' => 'tom']
+        ]
+    ]);
+    $arr = $wrapper->toArray();
+    expect($arr['items'][0]['name'])->toBe('bob')
+        ->and($arr['items'][1]['name'])->toBe('tom')
+        ->and($wrapper->getItems()[0]->getName())->toBe('bob')
+        ->and($wrapper->getItems()[1]->getName())->toBe('tom');
 });
 
-it('convert type with function', function () {
-    expect($this->bean->getPage())->toBe(1);
-});
 
 it('convert type with class', function () {
-    expect($this->bean->getStatus())->toBe(TestEnum::VALID);
+    $bean = new Status(['value' => 'VALID', 'page' => '1']);
+    expect($bean->getValue())->toBe(TestEnum::VALID)
+        ->and($bean->getPage())->toEqual(1);
 });
 
-it('test __set method', function () {
-    $this->bean->page = 2;
-    expect($this->bean->getPage())->toBe(2);
-    $arr = $this->bean->toArray();
-    expect($arr['page'])->toBe(2);
-    $json = json_decode($this->bean->toJson(), true);
-    expect($json['page'])->toBe(2);
-});
-
-it('test __get method', function () {
-    $this->bean->age = 10;
-    expect($this->bean->age)->toBe(10);
+it('test setter and getter method', function () {
+    $testBean = new class extends Bean {
+        protected string $username;
+    };
+    $testBean->setUsername('bob');
+    expect($testBean->getUsername())->toBe('bob');
 });
 
 it('skip property', function () {
-    $arr = $this->bean->toArray();
-    expect(!isset($arr['pivot']))->toBe(true);
+    $testBean = new class extends Bean {
+        protected array $_skip = ['skip'];
+        protected string $skip;
+    };
+    $arr = $testBean->toArray();
+    expect($arr)->toBeEmpty();
 });
 
-it('test __call method', function () {
-    $this->bean->setAge(10);
-    $arr = $this->bean->toArray();
-    expect($arr['age'])->toBe(10)
-        ->and($this->bean->getAge())->toBe(10);
-});
-
-it('test __call method2', function () {
-    $this->bean->setUsername('bob')->setAge(10);
-    expect($this->bean->getAge())->toBe(10);
-});
-
-it ('test non-existing property', function () {
-    $this->bean->setNotExistsProperty("undefined");
+it('test non-existing property', function () {
+    $testBean = new class extends Bean {};
+    $testBean->setNotExistsProperty("undefined");
 })->throws(PropertyNotFoundException::class);
+
+it('test to array with snake', function () {
+    $testBean = new class(['userId' => 1]) extends Bean {
+        protected int $userId;
+    };
+    $arr = $testBean->toArray();
+    expect($arr)->toHaveKey('user_id');
+    $arr = $testBean->toArray(false);
+    expect($arr)->toHaveKey('userId');
+});
