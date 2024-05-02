@@ -30,8 +30,6 @@ class Bean implements Arrayable
     {
         $this->collectMetaInfo();
         $this->init($data);
-        file_put_contents('test.json', json_encode($this->_meta));
-
     }
 
     private function collectMetaInfo(): void
@@ -64,6 +62,7 @@ class Bean implements Arrayable
                 'reflectProperty' => $property,
                 'converter' => $converter,
                 'beanList' => $beanList,
+                'value' => null,
             ];
         }
     }
@@ -72,11 +71,10 @@ class Bean implements Arrayable
     private function init(array $data): void
     {
         foreach ($this->_meta as $propertyName => $meta) {
-            $key = $meta['alias'] ?? $propertyName;
-            if (!isset($data[$key])) {
+            $value = $data[$meta['alias']] ?? $data[$propertyName] ?? $data[$meta['snake']] ?? null;
+            if ($value === null) {
                 continue;
             }
-            $value = $data[$key];
             if ($meta['converter'] !== null) {
                 $value = $this->convertValue($meta['converter'], $value);
             }
@@ -89,7 +87,7 @@ class Bean implements Arrayable
     }
 
 
-    private function convertValue(string $convertor,  mixed $value): mixed
+    private function convertValue(string $convertor, mixed $value): mixed
     {
         if (function_exists($convertor)) {
             return $convertor($value);
