@@ -54,14 +54,14 @@ class Optional
         return is_null($this->value);
     }
 
-    public function ofElseThrow(callable|string $exception)
+    public function ofElseThrow(callable $exception): self
     {
         if ($this->value !== null) {
             return $this->value;
         }
         if (is_string($exception)) {
-            throw new $exception();
+            throw $exception();
         }
-        throw new ($exception());
+        return $this;
     }
 }
