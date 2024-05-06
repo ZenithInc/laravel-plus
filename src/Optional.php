@@ -37,10 +37,8 @@ class Optional
         return new self($value);
     }
 
-    public function ofNullable(mixed $value): self
+    public static function ofNullable(mixed $value): self
     {
-        $this->value = $value;
-
         return new self($value);
     }
 
