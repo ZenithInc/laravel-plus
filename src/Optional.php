@@ -57,11 +57,8 @@ class Optional
     public function ofElseThrow(callable $exception): self
     {
         if ($this->value !== null) {
-            return $this->value;
+            return $this;
         }
-        if (is_string($exception)) {
-            throw $exception();
-        }
-        return $this;
+        throw $exception();
     }
 }
