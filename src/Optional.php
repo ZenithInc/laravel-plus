@@ -28,6 +28,11 @@ class Optional
         return $this->value;
     }
 
+    public static function empty(): self
+    {
+        return new self(null);
+    }
+
     public static function of(mixed $value): self
     {
         if ($value === null) {
