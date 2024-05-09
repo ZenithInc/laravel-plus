@@ -7,16 +7,27 @@ namespace Zenith\LaravelPlus;
 use UnexpectedValueException;
 use Zenith\LaravelPlus\Exceptions\NotSuchElementException;
 
+/**
+ * @template T
+ */
 class Optional
 {
+    /**
+     * @var T|null
+     */
     private mixed $value;
 
+    /**
+     * @param T|null $value
+     */
     public function __construct(mixed $value)
     {
         $this->value = $value;
     }
 
+
     /**
+     * @return T
      * @throws NotSuchElementException
      */
     public function get(): mixed
@@ -33,6 +44,10 @@ class Optional
         return new self(null);
     }
 
+    /**
+     * @param T|null $value
+     * @return self
+     */
     public static function of(mixed $value): self
     {
         if ($value === null) {
@@ -42,6 +57,10 @@ class Optional
         return new self($value);
     }
 
+    /**
+     * @param T|null $value
+     * @return self
+     */
     public static function ofNullable(mixed $value): self
     {
         return new self($value);
