@@ -75,7 +75,15 @@ class Optional
 
     public function isPresent(): bool
     {
-        return is_null($this->value);
+        return ! is_null($this->value);
+    }
+
+    public function ofElseGet(callable $func): mixed
+    {
+        if ($this->value === null) {
+            return $func();
+        }
+        return $this->value;
     }
 
     public function ofElseThrow(callable $exception): self
