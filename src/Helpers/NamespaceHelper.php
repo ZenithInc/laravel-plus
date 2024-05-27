@@ -16,7 +16,7 @@ class NamespaceHelper
     {
         $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $filePath);
         $explodedPath = explode(DIRECTORY_SEPARATOR, $filePath);
-        $explodedPath = array_filter($explodedPath, fn ($path) => ! empty($path));
+        $explodedPath = array_values(array_filter($explodedPath, fn ($path) => ! empty($path)));
         $indexOfApp = array_search('app', $explodedPath);
         $namespaceArray = array_slice($explodedPath, $indexOfApp);
         $namespace = implode('\\', $namespaceArray);
