@@ -17,7 +17,12 @@ class NamespaceHelper
         $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $filePath);
         $explodedPath = explode(DIRECTORY_SEPARATOR, $filePath);
         $explodedPath = array_values(array_filter($explodedPath, fn ($path) => ! empty($path)));
-        $indexOfApp = array_search('app', $explodedPath);
+        $indexOfApp = -1;
+        foreach ($explodedPath as $index => $part) {
+            if ($part === 'app') {
+                $indexOfApp = $index;
+            }
+        }
         $namespaceArray = array_slice($explodedPath, $indexOfApp);
         $namespace = implode('\\', $namespaceArray);
         return ucfirst(str_replace('.php', '', $namespace));
