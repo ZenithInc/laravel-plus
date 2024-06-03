@@ -35,6 +35,9 @@ class ParameterValidation
                         $rule = new $rule();
                     }
                 }
+                if (! in_array('required', $rules) && $instance->required) {
+                    $rules[] = 'required';
+                }
                 return [
                     'key' => $instance->key,
                     'rule' => $rules,

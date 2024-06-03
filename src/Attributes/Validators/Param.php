@@ -16,17 +16,17 @@ class Param
     public const string DEFAULT_MESSAGE = 'The :attribute field is error';
 
     /**
-     * Param constructor.
-     * Constructs a Param object.
+     * Class constructor.
      *
-     * @param string $key Parameter key for the method.
-     * @param string $rule The rule under which the key must comply.
-     * @param string $message The message attached to the key if it fails to comply with the rule.
-     *
+     * @param string $key The key for the validation rule.
+     * @param string $rule The validation rule to apply.
+     * @param bool $required Determines if the field is required or not (default is true).
+     * @param string $message The custom error message for the validation rule (default is self::DEFAULT_MESSAGE).
      */
     public function __construct(
         public string $key,
         public string $rule,
+        public bool $required = true,
         public string $message = self::DEFAULT_MESSAGE
     )
     {
