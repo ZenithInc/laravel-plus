@@ -63,6 +63,6 @@ class CollectHelper
             }
 
             return $elements;
-        })->all();
+        })->unique()->all();
     }
 }
