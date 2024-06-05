@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Validator;
 use ReflectionAttribute;
 use ReflectionException;
 use ReflectionMethod;
-use Symfony\Component\HttpFoundation\Response;
 use Zenith\LaravelPlus\Attributes\Validators\Param;
 use Zenith\LaravelPlus\Exceptions\ValidatedErrorException;
 
@@ -17,11 +16,11 @@ class ParameterValidation
     /**
      * Handle an incoming request.
      *
-     * @param Closure(Request): (Response) $next
+     * @param Closure(Request): mixed $next
      * @throws ReflectionException
      * @throws ValidatedErrorException
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): mixed
     {
         $controller = $request->route()->getController();
         $action = $request->route()->getActionMethod();

@@ -6,7 +6,6 @@ namespace Zenith\LaravelPlus\Middlewares;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use ReflectionAttribute;
 use ReflectionException;
 use ReflectionMethod;
@@ -17,7 +16,7 @@ class RequestParamsDefaultValueInjector
     /**
      * @throws ReflectionException
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): mixed
     {
         $controller = $request->route()->getController();
         $action = $request->route()->getActionMethod();
