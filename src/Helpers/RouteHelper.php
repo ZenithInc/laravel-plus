@@ -72,7 +72,6 @@ class RouteHelper
     {
         $instance = $attribute->newInstance();
         $uri = $prefix.$instance->path;
-        Route::{$routesMapping[$attribute->getName()]}($uri, [$controller, $method->getName()])
-            ->middleware([RequestBodyInjector::class]);
+        Route::{$routesMapping[$attribute->getName()]}($uri, [$controller, $method->getName()]);
     }
 }

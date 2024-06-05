@@ -26,6 +26,7 @@ class Param
     public function __construct(
         public string $key,
         public string $rule,
+        public mixed $default = null,
         public bool $required = true,
         public string $message = self::DEFAULT_MESSAGE
     )

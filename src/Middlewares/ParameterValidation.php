@@ -42,14 +42,16 @@ class ParameterValidation
                     'key' => $instance->key,
                     'rule' => $rules,
                     'message' => $instance->message,
+                    'required' => $instance->required,
                 ];
             });
-        $rules = $messages = [];
+        $rules = $keys = $messages = [];
         foreach ($params as $param) {
+            $keys[] = $param['key'];
             $rules[$param['key']] = $param['rule'];
             $messages[$param['key']] = $param['message'];
         }
-        $validator = Validator::make($request->all(), $rules, $messages);
+        $validator = Validator::make(request()->all(), $rules, $messages);
         if ($validator->stopOnFirstFailure()->fails()) {
             throw new ValidatedErrorException($validator->errors()->first());
         }
