@@ -34,7 +34,11 @@ class ParameterValidation
                         $rule = new $rule();
                     }
                 }
-                if (! in_array('required', $rules) && $instance->required) {
+                $isContainRequiredRule = ! collect($rules)
+                    ->filter(fn ($rule) => is_string($rule))
+                    ->filter(fn ($rule) => str_contains($rule, 'required'))
+                    ->isEmpty();
+                if (! $isContainRequiredRule && $instance->required) {
                     $rules[] = 'required';
                 }
                 return [
