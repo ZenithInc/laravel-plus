@@ -63,7 +63,7 @@ class CollectHelper
             }
 
             return $elements;
-        })->unique()->values()->toArray();
+        })->filter(fn ($item) => !empty($item))->unique()->values()->toArray();
     }
 
     /**

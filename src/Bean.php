@@ -17,7 +17,7 @@ use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
 
 /**
  * Class Bean
- * Implements Arrayable and ArrayAccess interfaces
+ * Implements Array able and ArrayAccess interfaces
  */
 class Bean implements Arrayable
 {
@@ -80,6 +80,10 @@ class Bean implements Arrayable
             }
             if ($meta['beanList'] !== null) {
                 $value = $this->convertBeanList($meta['beanList'], $value);
+            }
+            if (is_subclass_of($meta['type'], Bean::class)) {
+                $wrapper = $meta['type'];
+                $value = new $wrapper($value);
             }
             $meta['reflectProperty']->setValue($this, $value);
             $this->_meta[$propertyName]['value'] = $value;
