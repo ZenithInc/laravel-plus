@@ -65,4 +65,28 @@ class CollectHelper
             return $elements;
         })->unique()->values()->toArray();
     }
+
+    /**
+     * Build a tree structure from an array of items.
+     *
+     * @param array $items The array of items to build the tree from.
+     * @param string $parentKey The key for the parent identifier in each item. Default is 'parent_id'.
+     * @param string $uniqueKey The key for the unique identifier in each item. Default is 'id'.
+     * @param string $childrenKey The key for the children array in each item. Default is 'children'.
+     * @return array The tree structure built from the array of items.
+     */
+    public static function buildTree(array $items, string $parentKey = 'parent_id', string $uniqueKey = 'id', string $childrenKey = 'children'): array
+    {
+        $tree = [];
+        $items = collect($items)->keyBy($uniqueKey)->toArray();
+        foreach ($items as $item) {
+            if ($item[$parentKey] !== 0) {
+                $items[$item[$parentKey]][$childrenKey][] = &$items[$item[$uniqueKey]];
+            } else {
+                $tree[] = &$items[$item[$uniqueKey]];
+            }
+        }
+
+        return $tree;
+    }
 }
