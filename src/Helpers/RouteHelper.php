@@ -10,7 +10,6 @@ use Zenith\LaravelPlus\Attributes\Routes\DeleteMapping;
 use Zenith\LaravelPlus\Attributes\Routes\GetMapping;
 use Zenith\LaravelPlus\Attributes\Routes\PostMapping;
 use Zenith\LaravelPlus\Attributes\Routes\PutMapping;
-use Zenith\LaravelPlus\Middlewares\RequestBodyInjector;
 
 class RouteHelper
 {
@@ -26,7 +25,7 @@ class RouteHelper
      */
     public static function handleControllerPrefix(ReflectionAttribute $prefixAttribute): string
     {
-        $prefix = ($prefixAttribute->newInstance())->value;
+        $prefix = ($prefixAttribute->newInstance())->path;
 
         return str_starts_with($prefix, '/') ? $prefix : '/'.$prefix;
     }
@@ -60,7 +59,7 @@ class RouteHelper
 
     /**
      * Maps attribute to routes by creating a new instance of attribute, formulating the uri
-     * and mapping the corresponding route method in Laravel's Route facade.
+     * and mapping the corresponding route method in Laravel Route facade.
      *
      * @param  ReflectionAttribute  $attribute  Instance of PHP's ReflectionAttribute class identifying a route attribute
      * @param  string  $prefix  Prefix for the route uri

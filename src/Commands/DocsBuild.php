@@ -61,8 +61,14 @@ class DocsBuild extends Command
      */
     public function handle(): void
     {
-        $apis = $this->scanApiInfo();
-        $this->generateDocs($apis);
+        $apiInfo = $this->scanApiInfo();
+        $modules = collect($apiInfo)->groupBy('module')->all();
+        $builder = new VitePressConfigHelper();
+        $builder->nav('Home', '/');
+        foreach ($modules as $module => $apis) {
+            $builder->sidebar($module);
+            $this->generateDocs($apis->toArray(), $builder, $module);
+        }
     }
 
     /**
@@ -72,13 +78,10 @@ class DocsBuild extends Command
      * @param  array  $apis  The array of APIs to document. Each API is an associative array with 'namespace' and 'actions' keys.
      *                       'actions' itself is an array of action names.
      */
-    private function generateDocs(array $apis): void
+    private function generateDocs(array $apis, VitePressConfigHelper $builder, string $module): void
     {
         $docsDir = $this->getDocsDir();
         $this->deleteMdFilesExceptIndex($docsDir);
-        $builder = new VitePressConfigHelper();
-        $builder->nav('Home', '/')
-            ->sidebar('Api');
         $isFirst = false;
         foreach ($apis as $api) {
             $dir = $this->createDirectoryFromClassNamespace($api['namespace'], $docsDir);
@@ -88,12 +91,12 @@ class DocsBuild extends Command
                     $builder->nav('Api', $link);
                     $isFirst = true;
                 }
-                $builder->sidebarAppendItem('Api', $action['name'], $link);
+                $builder->sidebarAppendItem($module, $action['name'], $link);
                 $filename = $dir.DIRECTORY_SEPARATOR.$action['name'].'.md';
                 File::put($filename, $this->generateApiContent($api, $action));
             }
         }
-        File::put($docsDir.'/.vitepress/config.js', $builder->build());
+        File::put($docsDir.'/.vitepress/config.mjs', $builder->build());
     }
 
     /**
@@ -106,14 +109,31 @@ class DocsBuild extends Command
     private function generateApiContent(array $api, array $action): string
     {
         $params = collect($action['params'])->map(fn ($param) => array_values($param))->toArray();
+        $response = [];
+        $this->buildResponseTable($action['response'], $response, 0);
 
         return (new MarkdownHelper())
             ->meta(['outline' => 'deep'])
             ->h1($action['name'].' API')
-            ->table(['path', 'method', 'created_at'], [[$api['prefix'].$action['path'], $action['method'], Carbon::now()]])
-            ->h2('接口传参')
-            ->table(['name', 'rule', 'message'], $params)
+            ->table(['Path', 'Method', 'Created At'], [[$api['prefix'].$action['path'], $action['method'], Carbon::now()]])
+            ->h2('Request')
+            ->table(['Key', 'Rule', 'Description'], $params)
+            ->h2('Response')
+            ->table(['Key', 'Type', 'Example', 'Comment'], $response)
             ->build();
+    }
+
+    private function buildResponseTable(array $fields, array &$rows, int $level = 0): void
+    {
+        foreach ($fields as $key => $field) {
+            $key = str_repeat(' -> ', $level) . $key;
+            if (is_array($field['value'])) {
+                $rows[] = [$key, $field['type'], '', $field['comment']];
+                $this->buildResponseTable($field['value'], $rows, ++$level);
+                continue;
+            }
+            $rows[] = [$key, $field['type'], $field['value'], $field['comment']];
+        }
     }
 
     /**
@@ -172,6 +192,9 @@ class DocsBuild extends Command
         $controllerInfo = [];
         foreach ($files as $file) {
             $info = $this->getControllerInfo($file);
+            if ($info['isAbstract']) {
+                continue;
+            }
             $info['actions'] = $this->getActionsInfo($info['namespace']);
             // 读取方法注解
             $controllerInfo[] = $info;
@@ -201,7 +224,9 @@ class DocsBuild extends Command
         $info['alias'] = $clazzAlias?->newInstance()->value;
         $clazzPrefix = $clazzAttributes
             ->filter(fn (ReflectionAttribute $attribute) => $attribute->getName() === Prefix::class)->first();
-        $info['prefix'] = $clazzPrefix?->newInstance()->value;
+        $info['prefix'] = $clazzPrefix?->newInstance()->path;
+        $info['module'] = $clazzPrefix?->newInstance()->module;
+        $info['isAbstract'] = $reflectClazz->isAbstract();
 
         return $info;
     }
@@ -221,6 +246,9 @@ class DocsBuild extends Command
             ->filter(fn (ReflectionMethod $method) => ! $method->isConstructor())->toArray();
         $infos = [];
         foreach ($methods as $method) {
+            if ($method->isStatic() || !$method->isPublic()) {
+                continue;
+            }
             $infos[] = $this->getActionInfo(collect($method->getAttributes()), $method->getName());
         }
 
@@ -241,7 +269,7 @@ class DocsBuild extends Command
             return null;
         }
         $info['name'] = $this->getActionAlias($attributes) ?? $methodName;
-        $info['returnType'] = $this->getActionReturnType($attributes);
+        $info['response'] = $this->getActionResponse($attributes);
         $info['params'] = $this->getActionParameters($attributes);
 
         return $info;
@@ -276,17 +304,22 @@ class DocsBuild extends Command
     /**
      * Gets the return type of method based on the provided attributes collection.
      *
-     * @param  Collection  $attributes  A collection of ReflectionAttribute objects representing the attributes of the method.
-     * @return string|null The return type of the method, or null if no return type is found.
+     * @param Collection $attributes A collection of ReflectionAttribute objects representing the attributes of the method.
+     * @return array The return type of the method, or null if no return type is found.
      */
-    private function getActionReturnType(Collection $attributes): ?string
+    private function getActionResponse(Collection $attributes): array
     {
-        $methodReturnType = $attributes->filter(
+        $attribute = $attributes->filter(
             fn (ReflectionAttribute $attribute) => $attribute->getName() === Response::class
         )->first();
+        if (is_null($attribute)) {
+            return [];
+        }
 
-        /** @var ReflectionAttribute $methodReturnType */
-        return $methodReturnType?->newInstance()->clazz;
+        /** @var ReflectionAttribute $attribute */
+        $mock = $attribute->newInstance()->clazz;
+
+        return (new $mock())->getMockData();
     }
 
     /**

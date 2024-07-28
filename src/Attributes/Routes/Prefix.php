@@ -15,10 +15,12 @@ class Prefix
     /**
      * Prefix constructor.
      *
-     * @param string $value The value to construct the Prefix with
+     * @param string $path The path to be prefixed.
+     * @param string $module The module name.
      */
     public function __construct(
-        public string $value
+        public string $path,
+        public string $module = 'default',
     )
     {
     }
