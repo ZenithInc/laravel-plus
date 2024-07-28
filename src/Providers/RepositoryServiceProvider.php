@@ -19,6 +19,9 @@ class RepositoryServiceProvider extends ServiceProvider
     public function register(): void
     {
         $scanDir = app()->path('/Repositories/Impls');
+        if (!is_dir($scanDir)) {
+            return;
+        }
         $classes = $this->scanClasses($scanDir);
         foreach ($classes as $clazz) {
             $reflectionClazz = new ReflectionClass($clazz);

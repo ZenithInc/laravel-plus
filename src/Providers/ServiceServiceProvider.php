@@ -19,6 +19,9 @@ class ServiceServiceProvider extends ServiceProvider
     public function register(): void
     {
         $scanDir = app()->path('/Services');
+        if (!is_dir($scanDir)) {
+            return;
+        }
         $files = $this->scanForFiles($scanDir);
         foreach ($files as $file) {
             $ns = NamespaceHelper::path2namespace($file);
