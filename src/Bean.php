@@ -12,6 +12,7 @@ use ReflectionProperty;
 use Throwable;
 use Zenith\LaravelPlus\Attributes\Alias;
 use Zenith\LaravelPlus\Attributes\BeanList;
+use Zenith\LaravelPlus\Attributes\Mock;
 use Zenith\LaravelPlus\Attributes\TypeConverter;
 use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
 
@@ -42,6 +43,7 @@ class Bean implements Arrayable
             }
             $attributes = $property->getAttributes();
             $alias = $converter = $beanList = null;
+            $mock = [];
             foreach ($attributes as $attribute) {
                 if ($attribute->getName() === Alias::class) {
                     $alias = $attribute->newInstance()->value;
@@ -51,6 +53,19 @@ class Bean implements Arrayable
                 }
                 if ($attribute->getName() === BeanList::class) {
                     $beanList = $attribute->newInstance()->value;
+                }
+                if ($attribute->getName() === Mock::class) {
+                    $mockInstance = $attribute->newInstance();
+                    if ($mockInstance->type === MockType::OBJECT || $mockInstance->type === MockType::OBJECT_ARRAY) {
+                        $mockValue = (new $mockInstance->value([]))->getMockData();
+                    } else {
+                        $mockValue = $mockInstance->value;
+                    }
+                    $mock = [
+                        'value' => $mockValue,
+                        'comment' => $mockInstance->comment,
+                        'type' => strtolower($mockInstance->type->name),
+                    ];
                 }
             }
             $snake = $alias !== null ? Str::snake($alias) : Str::snake($property->getName());
@@ -63,6 +78,7 @@ class Bean implements Arrayable
                 'converter' => $converter,
                 'beanList' => $beanList,
                 'value' => null,
+                'mock' => $mock,
             ];
         }
     }
@@ -148,6 +164,16 @@ class Bean implements Arrayable
     public function toJson(bool $usingSnakeCase = true): string
     {
         return json_encode($this->toArray($usingSnakeCase));
+    }
+
+    public function getMockData(): array
+    {
+        $properties = [];
+        foreach ($this->_meta as $property => $meta) {
+            $properties[$property] = $meta['mock'];
+        }
+
+        return $properties;
     }
 
     /**
