@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Zenith\LaravelPlus\Base;
+namespace Zenith\LaravelPlus\Traits;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
-use ReflectionAttribute;
+use Illuminate\Support\Facades\Config;
 use ReflectionClass;
 use Zenith\LaravelPlus\Attributes\Autowired;
+use Zenith\LaravelPlus\Attributes\Value;
 
-class BaseLogic
-{
+trait Injectable {
     /**
      * @throws BindingResolutionException
      */
@@ -18,10 +18,13 @@ class BaseLogic
         $reflectionClazz = new ReflectionClass($this);
         foreach ($reflectionClazz->getProperties() as $property) {
             $autowired = $property->getAttributes(Autowired::class);
-            if (!$autowired) {
-                continue;
+            if ($autowired) {
+                $property->setValue($this, app()->make($property->getType()->getName()));
             }
-            $property->setValue($this, app()->make($property->getType()->getName()));
+            $values = $property->getAttributes(Value::class);
+            if (isset($values[0])) {
+                $property->setValue($this, Config::get(($values[0])->newInstance()->pattern));
+            }
         }
     }
 }
