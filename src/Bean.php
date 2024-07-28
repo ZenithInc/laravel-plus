@@ -6,7 +6,9 @@ namespace Zenith\LaravelPlus;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 use Override;
+use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionClassConstant;
 use ReflectionException;
 use ReflectionProperty;
 use Throwable;
@@ -27,12 +29,20 @@ class Bean implements Arrayable
 
     private array $_meta = [];
 
+    /**
+     * @param array $data
+     * @throws ReflectionException
+     */
     public function __construct(array $data = [])
     {
         $this->collectMetaInfo();
         $this->init($data);
     }
 
+    /**
+     * @return void
+     * @throws ReflectionException
+     */
     private function collectMetaInfo(): void
     {
         $reflectionClass = new ReflectionClass($this);
@@ -45,6 +55,7 @@ class Bean implements Arrayable
             $alias = $converter = $beanList = null;
             $mock = [];
             foreach ($attributes as $attribute) {
+                $enums = [];
                 if ($attribute->getName() === Alias::class) {
                     $alias = $attribute->newInstance()->value;
                 }
@@ -58,6 +69,9 @@ class Bean implements Arrayable
                     $mockInstance = $attribute->newInstance();
                     if ($mockInstance->type === MockType::OBJECT || $mockInstance->type === MockType::OBJECT_ARRAY) {
                         $mockValue = (new $mockInstance->value([]))->getMockData();
+                    } else if ($mockInstance->type === MockType::ENUM) {
+                        $mockValue = $mockInstance->value;
+                        $enums = $this->getEnumInfo($mockInstance->value);
                     } else {
                         $mockValue = $mockInstance->value;
                     }
@@ -65,6 +79,7 @@ class Bean implements Arrayable
                         'value' => $mockValue,
                         'comment' => $mockInstance->comment,
                         'type' => strtolower($mockInstance->type->name),
+                        'enums' => $enums,
                     ];
                 }
             }
@@ -83,6 +98,29 @@ class Bean implements Arrayable
         }
     }
 
+    /**
+     * @throws ReflectionException
+     */
+    private function getEnumInfo(string $enumClazz): array
+    {
+        $reflectionEnum = new ReflectionClass($enumClazz);
+        if (!$reflectionEnum->isEnum()) {
+            return [];
+        }
+        $enums = [];
+        $constants = $reflectionEnum->getConstants();
+        foreach ($constants as $name => $constant) {
+            $reflectionConstant = new ReflectionClassConstant($enumClazz, $name);
+            $alias = collect($reflectionConstant->getAttributes())->filter(fn (ReflectionAttribute $attribute) => $attribute->getName() === Alias::class)
+                ->first();
+            if ($alias === null) {
+                $enums[$name] = '';
+                continue;
+            }
+            $enums[$name] = $alias->newInstance()->value;
+        }
+        return $enums;
+    }
 
     private function init(array $data): void
     {

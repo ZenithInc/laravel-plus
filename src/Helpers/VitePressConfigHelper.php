@@ -54,6 +54,11 @@ class VitePressConfigHelper
     public function nav(string $text, string $link): self
     {
         /*Add navigation item to the configuration*/
+        foreach ($this->config['nav'] as $item) {
+            if ($item['text'] === $text) {
+                return $this;
+            }
+        }
         $this->config['nav'][] = compact('text', 'link');
 
         return $this;
@@ -118,7 +123,7 @@ class VitePressConfigHelper
     }
 
     /**
-     * Build the vitepress config
+     * Build the VitePress config
      */
     public function build(): string
     {

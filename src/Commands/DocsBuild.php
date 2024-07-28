@@ -65,10 +65,11 @@ class DocsBuild extends Command
         $modules = collect($apiInfo)->groupBy('module')->all();
         $builder = new VitePressConfigHelper();
         $builder->nav('Home', '/');
+        $docsDir = $this->getDocsDir();
         foreach ($modules as $module => $apis) {
-            $builder->sidebar($module);
-            $this->generateDocs($apis->toArray(), $builder, $module);
+            $this->generateDocs($apis->toArray(), $builder, $module, $docsDir);
         }
+        File::put($docsDir.'/.vitepress/config.mjs', $builder->build());
     }
 
     /**
@@ -78,25 +79,25 @@ class DocsBuild extends Command
      * @param  array  $apis  The array of APIs to document. Each API is an associative array with 'namespace' and 'actions' keys.
      *                       'actions' itself is an array of action names.
      */
-    private function generateDocs(array $apis, VitePressConfigHelper $builder, string $module): void
+    private function generateDocs(array $apis, VitePressConfigHelper $builder, string $module, string $docsDir): void
     {
-        $docsDir = $this->getDocsDir();
+        $builder->sidebar($module);
         $this->deleteMdFilesExceptIndex($docsDir);
-        $isFirst = false;
+        $isFirstApi = true;
         foreach ($apis as $api) {
             $dir = $this->createDirectoryFromClassNamespace($api['namespace'], $docsDir);
             foreach ($api['actions'] as $action) {
                 $link = Str::replace('\\', '/', Str::after($dir, 'docs').'/'.$action['name']);
-                if (!$isFirst) {
+                if ($isFirstApi) {
                     $builder->nav('Api', $link);
-                    $isFirst = true;
+                    $isFirstApi = false;
                 }
                 $builder->sidebarAppendItem($module, $action['name'], $link);
                 $filename = $dir.DIRECTORY_SEPARATOR.$action['name'].'.md';
                 File::put($filename, $this->generateApiContent($api, $action));
             }
         }
-        File::put($docsDir.'/.vitepress/config.mjs', $builder->build());
+
     }
 
     /**
@@ -109,27 +110,44 @@ class DocsBuild extends Command
     private function generateApiContent(array $api, array $action): string
     {
         $params = collect($action['params'])->map(fn ($param) => array_values($param))->toArray();
-        $response = [];
-        $this->buildResponseTable($action['response'], $response, 0);
+        $response = $enums = [];
+        $this->buildResponseTable($action['response'], $response, $enums, 0);
 
-        return (new MarkdownHelper())
+        $builder = (new MarkdownHelper())
             ->meta(['outline' => 'deep'])
             ->h1($action['name'].' API')
             ->table(['Path', 'Method', 'Created At'], [[$api['prefix'].$action['path'], $action['method'], Carbon::now()]])
             ->h2('Request')
             ->table(['Key', 'Rule', 'Description'], $params)
             ->h2('Response')
-            ->table(['Key', 'Type', 'Example', 'Comment'], $response)
-            ->build();
+            ->table(['Key', 'Type', 'Example', 'Comment'], $response);
+        if (empty($enums)) {
+            return $builder->build();
+        }
+        $builder->h2('Enums');
+        foreach ($enums as $name => $enum) {
+            $rows = [];
+            foreach ($enum as $field => $description) {
+                $rows[] = [$field, $description];
+            }
+            $builder->h3($name)->table(['Const', 'Description'], $rows);
+        }
+
+        return $builder->build();
     }
 
-    private function buildResponseTable(array $fields, array &$rows, int $level = 0): void
+    private function buildResponseTable(array $fields, array &$rows, array &$enums, int $level = 0): void
     {
         foreach ($fields as $key => $field) {
+            if ($field['type'] === 'enum') {
+                $tokens = explode('\\', $field['value']);
+                $field['value'] = array_pop($tokens);
+                $enums[$field['value']] = $field['enums'] ?? [];
+            }
             $key = str_repeat(' -> ', $level) . $key;
             if (is_array($field['value'])) {
                 $rows[] = [$key, $field['type'], '', $field['comment']];
-                $this->buildResponseTable($field['value'], $rows, ++$level);
+                $this->buildResponseTable($field['value'], $rows, $enums, ++$level);
                 continue;
             }
             $rows[] = [$key, $field['type'], $field['value'], $field['comment']];
