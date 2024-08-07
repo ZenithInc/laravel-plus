@@ -20,4 +20,6 @@ interface ICurlRepository
 
     public function modify(int $id, Bean $params): void;
 
+    public function findAll(): array;
+
 }

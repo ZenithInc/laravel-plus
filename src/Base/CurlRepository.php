@@ -56,4 +56,9 @@ class CurlRepository
     {
         $this->model->query()->where('id', $id)->update($bean->toArray());
     }
+
+    public function findAll(): array
+    {
+        return $this->model->query()->get();
+    }
 }
