@@ -62,4 +62,9 @@ class CurlRepository
     {
         return $this->model->query()->get();
     }
+
+    public function findByIds(array $ids): array
+    {
+        return $this->model->query()->whereIn('id', $ids)->get()->toArray();
+    }
 }
