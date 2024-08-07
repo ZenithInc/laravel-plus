@@ -250,4 +250,12 @@ class Bean implements Arrayable
 
         return true;
     }
+
+    /**
+     * @throws ReflectionException
+     */
+    public static function fromBean(Bean $bean): static
+    {
+        return new static($bean->toArray());
+    }
 }
