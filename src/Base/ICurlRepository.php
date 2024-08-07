@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zenith\LaravelPlus\Base;
 
+use Illuminate\Database\Eloquent\Collection;
 use Zenith\LaravelPlus\Bean;
 use Zenith\LaravelPlus\Optional;
 
@@ -20,6 +21,6 @@ interface ICurlRepository
 
     public function modify(int $id, Bean $params): void;
 
-    public function findAll(): array;
+    public function findAll(): Collection;
 
 }

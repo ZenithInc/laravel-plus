@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zenith\LaravelPlus\Base;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use ReflectionException;
 use Zenith\LaravelPlus\Bean;
@@ -57,7 +58,7 @@ class CurlRepository
         $this->model->query()->where('id', $id)->update($bean->toArray());
     }
 
-    public function findAll(): array
+    public function findAll(): Collection
     {
         return $this->model->query()->get();
     }
