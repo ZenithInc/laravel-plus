@@ -67,4 +67,13 @@ class CurlRepository
     {
         return $this->model->query()->whereIn('id', $ids)->get()->toArray();
     }
+
+    public function existsByFields(array $conditions): bool
+    {
+        foreach ($conditions as $field => $value) {
+            $this->model->where($field, $value);
+        }
+
+        return $this->model->exists();
+    }
 }

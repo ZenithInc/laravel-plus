@@ -24,4 +24,6 @@ interface ICurlRepository
     public function findAll(): Collection;
 
     public function findByIds(array $ids): array;
+
+    public function existsByFields(array $conditions): bool;
 }
