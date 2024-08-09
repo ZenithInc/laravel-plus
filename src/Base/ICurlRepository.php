@@ -19,6 +19,8 @@ interface ICurlRepository
 
     public function create(Bean $bean): int;
 
+    public function batchCreate(array $records): void;
+
     public function remove(int $id): void;
 
     public function modify(int $id, Bean $params): void;

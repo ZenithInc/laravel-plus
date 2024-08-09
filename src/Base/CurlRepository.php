@@ -52,6 +52,11 @@ class CurlRepository
         return $model->id;
     }
 
+    public function batchCreate(array $records): void
+    {
+        $this->model->insert($records);
+    }
+
     public function remove(int $id): void
     {
         $this->model->query()->where('id', $id)->delete();
