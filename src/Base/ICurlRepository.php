@@ -15,6 +15,8 @@ interface ICurlRepository
 
     public function existsById(int $id): bool;
 
+    public function existsInIds(array $ids): bool;
+
     public function create(Bean $bean): int;
 
     public function remove(int $id): void;

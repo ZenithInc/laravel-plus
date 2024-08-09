@@ -35,6 +35,13 @@ class CurlRepository
         return $this->model->query()->where('id', $id)->exists();
     }
 
+    public function existsInIds(array $ids): bool
+    {
+        $records = $this->model->whereIn('id', $ids)->get(['id']);
+
+        return count($records) === count($ids);
+    }
+
     /**
      * @throws ReflectionException
      */
