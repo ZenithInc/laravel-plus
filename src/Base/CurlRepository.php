@@ -52,6 +52,13 @@ class CurlRepository
         return $model->id;
     }
 
+    public function createWithArray(array $data): int
+    {
+        $model = $this->model->create($data);
+
+        return $model->id;
+    }
+
     public function batchCreate(array $records): void
     {
         $this->model->insert($records);
@@ -82,10 +89,10 @@ class CurlRepository
 
     public function existsByFields(array $conditions): bool
     {
+        $query = $this->model->query();
         foreach ($conditions as $field => $value) {
-            $this->model->where($field, $value);
+            $query->where($field, $value);
         }
-
-        return $this->model->exists();
+        return $query->exists();
     }
 }
