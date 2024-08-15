@@ -77,6 +77,11 @@ class CurlRepository
         $this->model->query()->where('id', $id)->update($bean->toArray());
     }
 
+    public function modifyWithArray(int $id, array $params): void
+    {
+        $this->model->query()->where('id', $id)->update($params);
+    }
+
     public function findAll(): Collection
     {
         return $this->model->query()->get();

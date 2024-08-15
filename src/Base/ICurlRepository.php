@@ -27,6 +27,8 @@ interface ICurlRepository
 
     public function modify(int $id, Bean $params): void;
 
+    public function modifyWithArray(int $id, array $params): void;
+
     public function findAll(): Collection;
 
     public function findByIds(array $ids): array;
