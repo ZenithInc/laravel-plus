@@ -25,9 +25,9 @@ interface ICurlRepository
 
     public function remove(int $id): void;
 
-    public function modify(int $id, Bean $params): void;
+    public function modify(int $id, Bean $params, array $excludes = []): void;
 
-    public function modifyWithArray(int $id, array $params): void;
+    public function modifyWithArray(int $id, array $params, array $excludes = []): void;
 
     public function findAll(): Collection;
 

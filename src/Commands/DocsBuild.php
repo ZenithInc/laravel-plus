@@ -147,7 +147,7 @@ class DocsBuild extends Command
             $key = str_repeat(' -> ', $level) . $key;
             if (is_array($field['value'])) {
                 $rows[] = [$key, $field['type'], '', $field['comment']];
-                $this->buildResponseTable($field['value'], $rows, $enums, ++$level);
+                $this->buildResponseTable($field['value'], $rows, $enums, $level + 1);
                 continue;
             }
             $rows[] = [$key, $field['type'], $field['value'], $field['comment']];

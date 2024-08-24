@@ -72,14 +72,16 @@ class CurlRepository
     /**
      * @throws ReflectionException
      */
-    public function modify(int $id, Bean $bean): void
+    public function modify(int $id, Bean $bean, array $excludes = []): void
     {
-        $this->model->query()->where('id', $id)->update($bean->toArray());
+        $data = collect($bean->toArray())->filter(fn($value, $key) => ! in_array($key, $excludes))->toArray();
+        $this->model->query()->where('id', $id)->update($data);
     }
 
-    public function modifyWithArray(int $id, array $params): void
+    public function modifyWithArray(int $id, array $params, array $excludes = []): void
     {
-        $this->model->query()->where('id', $id)->update($params);
+        $data = collect($params)->filter(fn($value, $key) => ! in_array($key, $excludes))->toArray();
+        $this->model->query()->where('id', $id)->update($data);
     }
 
     public function findAll(): Collection
