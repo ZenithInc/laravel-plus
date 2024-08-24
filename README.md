@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/ZenithInc/laravel-plus">
-   <img alt="Mybatis-Plus-Logo" src="http://file-linker.oss-cn-hangzhou.aliyuncs.com/BgI6FdW5SeIxdV0RNFZc.png	">
+   <img alt="Laravel-Plus-Logo" src="https://cdn-fusion.imgimg.cc/i/2024/c0a1618fd2b01412.png">
   </a>
 </p>
 
