@@ -4,11 +4,15 @@ declare(strict_types=1);
 namespace Zenith\LaravelPlus\Providers;
 
 use Carbon\Laravel\ServiceProvider;
+use Illuminate\Support\Facades\Log;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
 use Zenith\LaravelPlus\Attributes\Component;
+use Zenith\LaravelPlus\Attributes\Logic;
+use Zenith\LaravelPlus\Attributes\Repository;
+use Zenith\LaravelPlus\Attributes\Service;
 use Zenith\LaravelPlus\Helpers\NamespaceHelper;
 
 class ComponentScanProvider extends ServiceProvider
@@ -40,11 +44,15 @@ class ComponentScanProvider extends ServiceProvider
         foreach ($recursiveIterator as $file) {
             if ($file->isFile() && str_contains($file->getFilename(), '.php')) {
                 $clazz = NamespaceHelper::path2namespace($file->getPathname());
-                if (! class_exists($clazz)) {
+                try {
+                    $reflection = new ReflectionClass($clazz);
+                } catch (ReflectionException $_) {
                     continue;
                 }
-                $reflection = new ReflectionClass($clazz);
-                if (! $reflection->getAttributes(Component::class)) {
+                $isEmpty = collect($reflection->getAttributes())->filter(fn ($attribute) => in_array($attribute->getName(), [
+                    Component::class, Logic::class, Service::class, Repository::class
+                ]))->isEmpty();
+                if ($isEmpty) {
                     continue;
                 }
                 $classes[] = $clazz;
