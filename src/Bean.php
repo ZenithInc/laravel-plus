@@ -92,7 +92,7 @@ class Bean implements Arrayable
                 'reflectProperty' => $property,
                 'converter' => $converter,
                 'beanList' => $beanList,
-                'value' => null,
+                'value' => $property->hasDefaultValue() ? $property->getDefaultValue() : null,
                 'mock' => $mock,
             ];
         }
