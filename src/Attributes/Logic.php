@@ -6,6 +6,7 @@ namespace Zenith\LaravelPlus\Attributes;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS)]
+#[Component]
 class Logic
 {
 

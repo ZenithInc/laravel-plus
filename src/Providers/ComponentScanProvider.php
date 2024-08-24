@@ -8,9 +8,10 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
+use Zenith\LaravelPlus\Attributes\Component;
 use Zenith\LaravelPlus\Helpers\NamespaceHelper;
 
-class RepositoryServiceProvider extends ServiceProvider
+class ComponentScanProvider extends ServiceProvider
 {
 
     /**
@@ -18,11 +19,7 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $scanDir = app()->path('/Repositories/Impls');
-        if (!is_dir($scanDir)) {
-            return;
-        }
-        $classes = $this->scanClasses($scanDir);
+        $classes = $this->scanClasses(app()->path());
         foreach ($classes as $clazz) {
             $reflectionClazz = new ReflectionClass($clazz);
             $interfaces = $reflectionClazz->getInterfaceNames();
@@ -32,6 +29,9 @@ class RepositoryServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function scanClasses(string $basePath): array
     {
         $directoryIterator = new RecursiveDirectoryIterator($basePath);
@@ -40,6 +40,10 @@ class RepositoryServiceProvider extends ServiceProvider
         foreach ($recursiveIterator as $file) {
             if ($file->isFile() && str_contains($file->getFilename(), '.php')) {
                 $clazz = NamespaceHelper::path2namespace($file->getPathname());
+                $reflection = new ReflectionClass($clazz);
+                if (! $reflection->getAttributes(Component::class)) {
+                    continue;
+                }
                 $classes[] = $clazz;
             }
         }
