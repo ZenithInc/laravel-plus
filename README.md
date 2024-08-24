@@ -4,8 +4,8 @@
   </a>
 </p>
 
-![PHP Version](https://img.shields.io/badge/php-%3E%3D8.0-blue.svg)
-![Laravel Version](https://img.shields.io/badge/laravel-%3E%3D8.0-red.svg)
+![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-blue.svg)
+![Laravel Version](https://img.shields.io/badge/laravel-%3E%3D11.0-red.svg)
 [![Setup Automated](https://img.shields.io/badge/setup-automated-blue?logo=gitpod)](https://packagist.org)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 

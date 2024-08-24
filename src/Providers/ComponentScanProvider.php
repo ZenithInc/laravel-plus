@@ -40,6 +40,9 @@ class ComponentScanProvider extends ServiceProvider
         foreach ($recursiveIterator as $file) {
             if ($file->isFile() && str_contains($file->getFilename(), '.php')) {
                 $clazz = NamespaceHelper::path2namespace($file->getPathname());
+                if (! class_exists($clazz)) {
+                    continue;
+                }
                 $reflection = new ReflectionClass($clazz);
                 if (! $reflection->getAttributes(Component::class)) {
                     continue;
