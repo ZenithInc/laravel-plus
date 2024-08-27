@@ -46,7 +46,7 @@ class Bean implements Arrayable
     private function collectMetaInfo(): void
     {
         $reflectionClass = new ReflectionClass($this);
-        $properties = $reflectionClass->getProperties(ReflectionProperty::IS_PROTECTED);
+        $properties = $reflectionClass->getProperties(ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PUBLIC);
         foreach ($properties as $property) {
             if (str_starts_with($property->getName(), '_') || in_array($property->getName(), $this->_skip)) {
                 continue;
