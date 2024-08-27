@@ -28,7 +28,7 @@ class ParameterValidation
         $params = collect($reflectionMethod->getAttributes(Param::class))
             ->map(function (ReflectionAttribute $attribute) {
                 $instance = $attribute->newInstance();
-                $rules = explode('|', $attribute->newInstance()->rule);
+                $rules = explode('|', $attribute->newInstance()->rules);
                 foreach ($rules as &$rule) {
                     if (class_exists($rule)) {
                         $rule = new $rule();
