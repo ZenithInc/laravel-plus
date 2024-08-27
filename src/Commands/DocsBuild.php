@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Zenith\LaravelPlus\Commands;
@@ -22,6 +23,7 @@ use Zenith\LaravelPlus\Attributes\Routes\Response;
 use Zenith\LaravelPlus\Attributes\Validators\Param;
 use Zenith\LaravelPlus\Helpers\ControllerHelper;
 use Zenith\LaravelPlus\Helpers\MarkdownHelper;
+use Zenith\LaravelPlus\Helpers\TypeScriptExampleGenerator;
 use Zenith\LaravelPlus\Helpers\VitePressConfigHelper;
 
 class DocsBuild extends Command
@@ -33,7 +35,7 @@ class DocsBuild extends Command
      * the application, primarily used in the scanning and generating of API
      * documentation.
      */
-    protected const array ROUTE_ATTRIBUTES = [
+    protected const ROUTE_ATTRIBUTES = [
         GetMapping::class => 'GET',
         PostMapping::class => 'POST',
         PutMapping::class => 'PUT',
@@ -103,24 +105,34 @@ class DocsBuild extends Command
     /**
      * This private function generates API content using the provided $api and $action arrays.
      *
-     * @param  array  $api:  This array contains relevant API data.
-     * @param  array  $action:  This array contains action data such as 'params','name','method','path',and so on.
+     * @param  array  $api  :  This array contains relevant API data.
+     * @param  array  $action  :  This array contains action data such as 'params','name','method','path',and so on.
      * @return string: The function returns a string, which contains the generated API content in Markdown format.
      */
     private function generateApiContent(array $api, array $action): string
     {
-        $params = collect($action['params'])->map(fn ($param) => array_values($param))->toArray();
+        $params = collect($action['params'])->map(fn($param) => array_values($param))->toArray();
+        $path = $api['prefix'].$action['path'];
         $response = $enums = [];
+        $typescriptExample = '';
         $this->buildResponseTable($action['response'], $response, $enums, 0);
-
+        if (!empty($response)) {
+            $typescriptExample = (new TypeScriptExampleGenerator())->convert($action['response'], 'Result');
+        }
         $builder = (new MarkdownHelper())
             ->meta(['outline' => 'deep'])
             ->h1($action['name'].' API')
-            ->table(['Path', 'Method', 'Created At'], [[$api['prefix'].$action['path'], $action['method'], Carbon::now()]])
+            ->table(['Path', 'Method', 'Created At'],
+                [['/api' . $api['prefix'].$action['path'], $action['method'], Carbon::now()]])
             ->h2('Request')
             ->table(['Key', 'Rule', 'Description'], $params)
             ->h2('Response')
             ->table(['Key', 'Type', 'Example', 'Comment'], $response);
+        if (!empty($typescriptExample)) {
+            $builder->p('TypeScript Result Example:')
+                ->code($typescriptExample, 'TypeScript');
+        }
+
         if (empty($enums)) {
             return $builder->build();
         }
@@ -144,7 +156,7 @@ class DocsBuild extends Command
                 $field['value'] = array_pop($tokens);
                 $enums[$field['value']] = $field['enums'] ?? [];
             }
-            $key = str_repeat(' -> ', $level) . $key;
+            $key = str_repeat(' -> ', $level).$key;
             if (is_array($field['value'])) {
                 $rows[] = [$key, $field['type'], '', $field['comment']];
                 $this->buildResponseTable($field['value'], $rows, $enums, $level + 1);
@@ -175,7 +187,7 @@ class DocsBuild extends Command
         $relativeNamespace = Str::before($relativeNamespace, 'Controller');
         $relativeDirectory = Str::replace('\\', DIRECTORY_SEPARATOR, $relativeNamespace);
         $directory = $baseDirectory.'/'.$relativeDirectory;
-        if (! File::exists($directory)) {
+        if (!File::exists($directory)) {
             File::makeDirectory($directory, 0775, true);
         }
 
@@ -238,10 +250,10 @@ class DocsBuild extends Command
         $reflectClazz = new ReflectionClass($ns);
         $clazzAttributes = collect($reflectClazz->getAttributes());
         $clazzAlias = $clazzAttributes
-            ->filter(fn (ReflectionAttribute $attribute) => $attribute->getName() === Alias::class)->first();
+            ->filter(fn(ReflectionAttribute $attribute) => $attribute->getName() === Alias::class)->first();
         $info['alias'] = $clazzAlias?->newInstance()->value;
         $clazzPrefix = $clazzAttributes
-            ->filter(fn (ReflectionAttribute $attribute) => $attribute->getName() === Prefix::class)->first();
+            ->filter(fn(ReflectionAttribute $attribute) => $attribute->getName() === Prefix::class)->first();
         $info['prefix'] = $clazzPrefix?->newInstance()->path;
         $info['module'] = $clazzPrefix?->newInstance()->module;
         $info['isAbstract'] = $reflectClazz->isAbstract();
@@ -261,7 +273,7 @@ class DocsBuild extends Command
     {
         $reflectClazz = new ReflectionClass($ns);
         $methods = collect($reflectClazz->getMethods(ReflectionMethod::IS_PUBLIC))
-            ->filter(fn (ReflectionMethod $method) => ! $method->isConstructor())->toArray();
+            ->filter(fn(ReflectionMethod $method) => !$method->isConstructor())->toArray();
         $infos = [];
         foreach ($methods as $method) {
             if ($method->isStatic() || !$method->isPublic()) {
@@ -298,20 +310,20 @@ class DocsBuild extends Command
      *
      * @param  Collection  $attributes  - A collection of ReflectionAttribute instances.
      * @return array - An array consisting of method parameters as associative arrays. Each parameter array
-     *               contains 'key', 'rule', and 'message' derived from an instance of 'Param' class.
+     *               contains 'key', 'rules', and 'message' derived from an instance of 'Param' class.
      */
     private function getActionParameters(Collection $attributes): array
     {
         $paramAttributes = $attributes->filter(
-            fn (ReflectionAttribute $attribute) => $attribute->getName() === Param::class
+            fn(ReflectionAttribute $attribute) => $attribute->getName() === Param::class
         );
         $params = [];
         foreach ($paramAttributes as $paramAttribute) {
             $paramInstance = $paramAttribute->newInstance();
             $params[] = [
                 'key' => $paramInstance->key,
-                // 因为 `|` 和最终生成的 Markdown 中的表格语法冲突
-                'rule' => Str::replace('|', ',', $paramInstance->rule),
+                // Because the | symbol conflicts with the table syntax in the final generated Markdown.
+                'rule' => Str::replace('|', ',', $paramInstance->rules),
                 'message' => $paramInstance->message,
             ];
         }
@@ -322,13 +334,13 @@ class DocsBuild extends Command
     /**
      * Gets the return type of method based on the provided attributes collection.
      *
-     * @param Collection $attributes A collection of ReflectionAttribute objects representing the attributes of the method.
+     * @param  Collection  $attributes  A collection of ReflectionAttribute objects representing the attributes of the method.
      * @return array The return type of the method, or null if no return type is found.
      */
     private function getActionResponse(Collection $attributes): array
     {
         $attribute = $attributes->filter(
-            fn (ReflectionAttribute $attribute) => $attribute->getName() === Response::class
+            fn(ReflectionAttribute $attribute) => $attribute->getName() === Response::class
         )->first();
         if (is_null($attribute)) {
             return [];
@@ -349,7 +361,7 @@ class DocsBuild extends Command
     private function getActionAlias(Collection $attributes): ?string
     {
         $methodAlias = $attributes->filter(
-            fn (ReflectionAttribute $attribute) => $attribute->getName() === Alias::class
+            fn(ReflectionAttribute $attribute) => $attribute->getName() === Alias::class
         )->first();
 
         /** @var ReflectionAttribute $methodAlias */
@@ -365,7 +377,7 @@ class DocsBuild extends Command
     private function getActionRoute(Collection $attributes): array
     {
         $routeAttribute = $attributes->filter(
-            fn (ReflectionAttribute $attribute) => in_array($attribute->getName(), array_keys(self::ROUTE_ATTRIBUTES))
+            fn(ReflectionAttribute $attribute) => in_array($attribute->getName(), array_keys(self::ROUTE_ATTRIBUTES))
         )->first();
 
         /** @var ReflectionAttribute $routeAttribute */

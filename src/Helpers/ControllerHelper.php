@@ -13,7 +13,7 @@ class ControllerHelper
      * An array constant that contains a list of file name filters.
      * These filters are used in scanForFiles function to filter out files while traversing through directories.
      */
-    private const array FILENAME_FILTERS = [
+    private const FILENAME_FILTERS = [
         'Controller.php',
     ];
 

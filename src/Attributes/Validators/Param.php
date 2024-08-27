@@ -19,13 +19,13 @@ class Param
      * Class constructor.
      *
      * @param string $key The key for the validation rule.
-     * @param string $rule The validation rule to apply.
+     * @param string $rules The validation rule to apply.
      * @param bool $required Determines if the field is required or not (default is true).
      * @param string $message The custom error message for the validation rule (default is self::DEFAULT_MESSAGE).
      */
     public function __construct(
         public string $key,
-        public string $rule,
+        public string $rules,
         public mixed $default = null,
         public bool $required = true,
         public string $message = self::DEFAULT_MESSAGE

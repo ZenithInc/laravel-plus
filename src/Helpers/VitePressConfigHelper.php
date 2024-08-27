@@ -13,7 +13,7 @@ class VitePressConfigHelper
 {
     /** @var array Base configuration array */
     private array $config = [
-        'title' => 'The AI-Next Project API',
+        'title' => 'The API',
         'description' => 'The api docs',
         'nav' => [],
         'sidebar' => [],

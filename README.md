@@ -88,6 +88,7 @@ Then, you can use the RequestBody annotation to inject parameters from the body:
 ```php
 use Zenith\LaravelPlus\Attributes\Routes\GetMapping;
 use Zenith\LaravelPlus\Attributes\Requests\RequestBody;
+use Zenith\LaravelPlus\Bean;
 
 class UserController extends Controller
 {
@@ -95,7 +96,8 @@ class UserController extends Controller
     public function login(#[RequestBody] RegisterParams $params) {}
 }
 
-class RegisterParams
+// The RegisterParams class must extend the Bean class.
+class RegisterParams extends Bean
 {
     // The modifiers must be public or protected.
     protected string $username;
@@ -103,8 +105,6 @@ class RegisterParams
     protected string $password;
 }
 ```
-
-
 
 ## Validators
 
