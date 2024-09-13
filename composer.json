@@ -3,8 +3,8 @@
     "description": "Laravel-Plus is an efficient Laravel extension package designed to enhance development productivity. It integrates powerful annotation handling and practical helper classes, making the development of Laravel applications more convenient and flexible.",
     "type": "library",
     "require": {
-        "php": "^8.3",
-        "laravel/framework": "^11.0"
+        "php": "^8.2",
+        "laravel/framework": "^8.0"
     },
     "license": "MIT",
     "autoload": {
