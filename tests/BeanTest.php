@@ -73,3 +73,18 @@ it('test to array with snake', function () {
     $arr = $testBean->toArray(false);
     expect($arr)->toHaveKey('userId');
 });
+
+it('test union type', function () {
+    $testBean = new Component([
+        'type' => 'text',
+        'settings' => ['minLength' => 3, 'maxLength' => 10],
+    ]);
+    expect($testBean->getSettings()->getMaxLength())->toBe(10)
+        ->and($testBean->getSettings()->getMinLength())->toBe(3);
+    $testBean = new Component([
+        'type' => 'number',
+        'settings' => ['minValue' => 3, 'maxValue' => 10],
+    ]);
+    expect($testBean->getSettings()->getMaxValue())->toBe(10)
+        ->and($testBean->getSettings()->getMinValue())->toBe(3);
+});

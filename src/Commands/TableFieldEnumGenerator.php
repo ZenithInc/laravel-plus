@@ -45,6 +45,8 @@ class TableFieldEnumGenerator extends Command
             $content .= "\n"."namespace App\Enums\Tables;"."\n";
             $content .= "\n".'enum '.$className.': string'."\n";
             $content .= '{'."\n";
+            $content .= "    const _TABLE_NAME = '${table['name']}';"."\n";
+            $content .= "\n    const _TABLE_COMMENT = '${table['comment']}';"."\n";
             $content .= "    const array COLUMNS = ['".implode("', '", $columns)."'];"."\n";
             foreach ($columns as $column) {
                 $content .= "\n".'    case '.Str::upper($column)." = '".$column."';"."\n";

@@ -16,6 +16,7 @@ use Zenith\LaravelPlus\Attributes\Alias;
 use Zenith\LaravelPlus\Attributes\BeanList;
 use Zenith\LaravelPlus\Attributes\Mock;
 use Zenith\LaravelPlus\Attributes\TypeConverter;
+use Zenith\LaravelPlus\Attributes\UnionType;
 use Zenith\LaravelPlus\Exceptions\PropertyNotFoundException;
 
 /**
@@ -54,6 +55,7 @@ class Bean implements Arrayable
             $attributes = $property->getAttributes();
             $alias = $converter = $beanList = null;
             $mock = [];
+            $unionType = ['is' => false, 'type' =>'', 'map' => []];
             foreach ($attributes as $attribute) {
                 $enums = [];
                 if ($attribute->getName() === Alias::class) {
@@ -82,11 +84,23 @@ class Bean implements Arrayable
                         'enums' => $enums,
                     ];
                 }
+                if ($attribute->getName() === UnionType::class) {
+                    $unionType = [
+                        'is' => true,
+                        'type' => $attribute->newInstance()->type,
+                        'map' => $attribute->newInstance()->map,
+                    ];
+                }
             }
             $snake = $alias !== null ? Str::snake($alias) : Str::snake($property->getName());
 
+            $type = 'UnionType';
+            if (!$unionType['is']) {
+                $type = $property->getType()?->getName();
+            }
+
             $this->_meta[$property->getName()] = [
-                'type' => $property->getType()?->getName(),
+                'type' => $type,
                 'alias' => $alias,
                 'snake' => $snake,
                 'reflectProperty' => $property,
@@ -94,6 +108,7 @@ class Bean implements Arrayable
                 'beanList' => $beanList,
                 'value' => $property->hasDefaultValue() ? $property->getDefaultValue() : null,
                 'mock' => $mock,
+                'union' => $unionType,
             ];
         }
     }
@@ -131,6 +146,11 @@ class Bean implements Arrayable
             }
             if ($meta['converter'] !== null) {
                 $value = $this->convertValue($meta['converter'], $value);
+            }
+            if ($meta['union']['is'] === true) {
+                $typeValue = $this->_meta[$meta['union']['type']]['value'];
+                $wrapper = $meta['union']['map'][$typeValue];
+                $value = new $wrapper($value);
             }
             if ($meta['beanList'] !== null) {
                 $value = $this->convertBeanList($meta['beanList'], $value);
