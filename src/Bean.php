@@ -197,7 +197,7 @@ class Bean implements Arrayable
         $arr = [];
         foreach ($this->_meta as $propertyName => $meta) {
             $value = $meta['value'];
-            if (is_object($value) && method_exists($value, 'toArray')) {
+            if (is_object($value) && (is_subclass_of($value, Bean::class) || method_exists($value, 'toArray'))) {
                 $value = $value->toArray();
             }
             if (is_array($value) && isset($value[0]) && is_subclass_of($value[0], Bean::class)) {
@@ -211,7 +211,6 @@ class Bean implements Arrayable
             $key = $usingSnakeCase ? $meta['snake'] : $propertyName;
             $arr[$key] = $value;
         }
-
         return $arr;
     }
 

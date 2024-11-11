@@ -88,3 +88,13 @@ it('test union type', function () {
     expect($testBean->getSettings()->getMaxValue())->toBe(10)
         ->and($testBean->getSettings()->getMinValue())->toBe(3);
 });
+
+it('test union type to array', function () {
+    $testBean = new Component([
+        'type' => 'text',
+        'settings' => ['minLength' => 3, 'maxLength' => 10],
+    ]);
+    $arr = $testBean->toArray();
+    expect($arr['settings']['min_length'])->toBe(3)
+        ->and($arr['settings']['max_length'])->toBe(10);
+});
