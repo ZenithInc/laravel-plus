@@ -54,7 +54,9 @@ class ParameterValidation
             $rules[$param['key']] = $param['rule'];
             $messages[$param['key']] = $param['message'];
         }
-        $validator = Validator::make(request()->all(), $rules, $messages);
+        $routeParameters = $request->route()->parameters();
+        $parameters = array_merge($routeParameters, $request->all());
+        $validator = Validator::make($parameters, $rules, $messages);
         if ($validator->stopOnFirstFailure()->fails()) {
             throw new ValidatedErrorException($validator->errors()->first());
         }
