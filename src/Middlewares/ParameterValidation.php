@@ -52,7 +52,13 @@ class ParameterValidation
         foreach ($params as $param) {
             $keys[] = $param['key'];
             $rules[$param['key']] = $param['rule'];
-            $messages[$param['key']] = $param['message'];
+            // Multiple language support.
+            if (str_starts_with($param['message'], 'trans:')) {
+                $key = substr($param['message'], strlen('trans:'));
+                $messages[$param['key']] = trans($key) ?? $param['message'];
+            } else {
+                $messages[$param['key']] = $param['message'];
+            }
         }
         $routeParameters = $request->route()->parameters();
         $parameters = array_merge($routeParameters, $request->all());
