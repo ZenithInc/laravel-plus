@@ -20,24 +20,27 @@ class CurlRepository
      */
     protected Model $model;
 
+    protected string $primaryKey = 'id';
+
     public function __construct(Model $model)
     {
         $this->model = $model;
+        $this->primaryKey = $this->model->getKeyName();
     }
 
-    public function findById(int $id): Optional
+    public function findById(int|string $id): Optional
     {
-        return Optional::ofNullable($this->model->query()->where('id', $id)->first());
+        return Optional::ofNullable($this->model->query()->where($this->primaryKey, $id)->first());
     }
 
-    public function existsById(int $id): bool
+    public function existsById(int|string $id): bool
     {
-        return $this->model->query()->where('id', $id)->exists();
+        return $this->model->query()->where($this->primaryKey, $id)->exists();
     }
 
     public function existsInIds(array $ids): bool
     {
-        $records = $this->model->whereIn('id', $ids)->get(['id']);
+        $records = $this->model->whereIn($this->primaryKey, $ids)->get([$this->primaryKey]);
 
         return count($records) === count($ids);
     }
@@ -45,7 +48,7 @@ class CurlRepository
     /**
      * @throws ReflectionException
      */
-    public function create(Bean $bean): int
+    public function create(Bean $bean): int|string
     {
         $model = $this->model->create($bean->toArray());
 
@@ -64,24 +67,27 @@ class CurlRepository
         $this->model->insert($records);
     }
 
-    public function remove(int $id): void
+    public function remove(int|string $id): void
     {
-        $this->model->query()->where('id', $id)->delete();
+        $this->model->query()->where($this->primaryKey, $id)->delete();
     }
 
     /**
      * @throws ReflectionException
      */
-    public function modify(int $id, Bean $bean, array $excludes = []): void
+    public function modify(int|string $id, Bean $bean, array $excludes = []): void
     {
         $data = collect($bean->toArray())->filter(fn($value, $key) => ! in_array($key, $excludes))->toArray();
-        $this->model->query()->where('id', $id)->update($data);
+        $this->model->query()->where($this->primaryKey, $id)->update($data);
     }
 
-    public function modifyWithArray(int $id, array $params, array $excludes = []): void
+    public function modifyWithArray(int|string $id, array $params, array $excludes = []): void
     {
+        if (isset($params[$this->primaryKey])) {
+            unset($params[$this->primaryKey]);
+        }
         $data = collect($params)->filter(fn($value, $key) => ! in_array($key, $excludes))->toArray();
-        $this->model->query()->where('id', $id)->update($data);
+        $this->model->query()->where($this->primaryKey, $id)->update($data);
     }
 
     public function findAll(): Collection
@@ -91,7 +97,7 @@ class CurlRepository
 
     public function findByIds(array $ids): array
     {
-        return $this->model->query()->whereIn('id', $ids)->get()->toArray();
+        return $this->model->query()->whereIn($this->primaryKey, $ids)->get()->toArray();
     }
 
     public function existsByFields(array $conditions): bool
