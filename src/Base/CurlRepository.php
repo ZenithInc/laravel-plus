@@ -55,7 +55,7 @@ class CurlRepository
         return $model->id;
     }
 
-    public function createWithArray(array $data): int
+    public function createWithArray(array $data): int|string
     {
         $model = $this->model->create($data);
 

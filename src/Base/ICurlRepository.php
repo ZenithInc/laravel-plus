@@ -21,7 +21,7 @@ interface ICurlRepository
 
     public function batchCreate(array $records): void;
 
-    public function createWithArray(array $data): int;
+    public function createWithArray(array $data): int|string;
 
     public function remove(int|string $id): void;
 
