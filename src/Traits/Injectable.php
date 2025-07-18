@@ -23,7 +23,10 @@ trait Injectable {
             }
             $values = $property->getAttributes(Value::class);
             if (isset($values[0])) {
-                $property->setValue($this, Config::get(($values[0])->newInstance()->pattern));
+                $instance = $values[0]->newInstance();
+                $pattern = $instance->pattern;
+                $defaultValue = $instance->defaultValue;
+                $property->setValue($this, Config::get($pattern, $defaultValue));
             }
         }
     }

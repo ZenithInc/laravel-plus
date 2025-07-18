@@ -9,7 +9,7 @@ use Attribute;
 class Value
 {
    
-    public function __construct(public string $pattern)
+    public function __construct(public string $pattern, public $defaultValue = null)
     {
     }
 }

@@ -12,35 +12,36 @@
 
 ## Laravel Plus
 
-[中文文档](README_CN.md) | English
+中文文档 | [English](README.md)
 
-Laravel is an elegant framework that greatly simplifies development. However, no framework is truly "out-of-the-box" ready for all use cases; customization based on individual habits and project requirements is often necessary.
+Laravel 是一个优雅的框架，极大地简化了开发工作。然而，没有任何框架能够真正做到对所有用例都"开箱即用"；基于个人习惯和项目需求进行定制往往是必要的。
 
-Laravel Plus addresses this need by incorporating AOP concepts from Java's Spring Boot and extensively utilizing PHP 8 attributes to streamline the development process.
+Laravel Plus 正是为了满足这一需求而生，它融合了 Java Spring Boot 的 AOP 概念，并广泛利用 PHP8 注解来简化开发流程。
 
-> This project is currently under development. Please be cautious when using it in a production environment.
+> 该项目目前正在开发中，在生产环境中使用时请谨慎。
 
-## Installation
+## 安装
 
-This is installable via [Composer](https://getcomposer.org/) as [https://packagist.org/packages/zenithsu/laravel-plus](zenithsu/laravel-plus).
+通过 [Composer](https://getcomposer.org/) 安装 [zenithsu/laravel-plus](https://packagist.org/packages/zenithsu/laravel-plus)。
 
 ```shell
 composer require zenithsu/laravel-plus
 ```
 
-## Easy Router
+## 简易路由
 
-In Laravel, routes need to be configured separately in `web.php` or `api.php`, which is not convenient during development as it requires switching between different files.
+在 Laravel 中，路由需要在 `web.php` 或 `api.php` 中单独配置，这在开发过程中并不方便，因为需要在不同文件之间切换。
 
-In contrast, frameworks like Spring Boot or Flask allow route configuration using annotations, making the coding process more fluid. Therefore, I have encapsulated annotation-based routing.
+相比之下，像 Spring Boot 或 Flask 这样的框架允许使用注解配置路由，使编码过程更加流畅。因此，我封装了基于注解的路由功能。
 
-First, you need to register in api.php, the code is as follows:
+首先，你需要在 `api.php` 中注册，代码如下：
 ```php
 use Zenith\LaravelPlus\EasyRouter;
 
 EasyRouter::register();
 ```
-Then, you can use route annotations before controller methods:
+
+然后，你可以在控制器方法前使用路由注解：
 ```php
 class UserController
 {
@@ -48,9 +49,11 @@ class UserController
     public function login() {}
 }
 ```
-You can access this API via `/api/login`. In addition to `GetMapping`, `PostMapping`, `PutMapping`, and `DeleteMapping` are also supported.
 
-Furthermore, you can add a Prefix annotation to the controller to uniformly add a route prefix for all methods within the controller.
+你可以通过 `/api/login` 访问此 API。除了 `GetMapping` 之外，还支持 `PostMapping`、`PutMapping` 和 `DeleteMapping`。
+
+此外，你可以在控制器上添加 Prefix 注解，为控制器内的所有方法统一添加路由前缀。
+
 ```php
 use Zenith\LaravelPlus\Attributes\Routes\GetMapping;
 use Zenith\LaravelPlus\Attributes\Routes\PostMapping;
@@ -67,9 +70,9 @@ class UserController
 }
 ```
 
-## Request
+## 请求处理
 
-In Laravel-Plus, inspired by SpringBoot's RequestBody annotation, you can use a class to carry parameters from the body:
+在 Laravel-Plus 中，受 SpringBoot 的 RequestBody 注解启发，你可以使用一个类来承载来自请求体的参数：
 
 ```php
 use Zenith\LaravelPlus\Middlewares\RequestBodyInjector;
@@ -85,7 +88,7 @@ abstract class Controller implements HasMiddleware
 }
 ```
 
-Then, you can use the RequestBody annotation to inject parameters from the body:
+然后，你可以使用 RequestBody 注解来注入来自请求体的参数：
 
 ```php
 use Zenith\LaravelPlus\Attributes\Routes\GetMapping;
@@ -98,21 +101,21 @@ class UserController extends Controller
     public function login(#[RequestBody] RegisterParams $params) {}
 }
 
-// The RegisterParams class must extend the Bean class.
+// RegisterParams 类必须继承 Bean 类
 class RegisterParams extends Bean
 {
-    // The modifiers must be public or protected.
+    // 修饰符必须是 public 或 protected
     protected string $username;
     
     protected string $password;
 }
 ```
 
-## Validators
+## 验证器
 
-In Laravel, parameter validation is not a difficult task. However, it can be made even simpler through the use of annotations.
+在 Laravel 中，参数验证并不是一项困难的任务。然而，通过使用注解可以让它变得更加简单。
 
-First, you need to enable the parameter validation middleware:
+首先，你需要启用参数验证中间件：
 ```php
 use Zenith\LaravelPlus\Middlewares\RequestParamsDefaultValueInjector;
 
@@ -121,14 +124,14 @@ abstract class Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            RequestParamsDefaultValueInjector::class
+            RequestParamsDefaultValueInjector::class,
             ParameterValidation::class,
         ];
     }
 }
 ```
 
-Then, you can use the Param annotation to validate parameters:
+然后，你可以使用 Param 注解来验证参数：
 
 ```php
 use Zenith\LaravelPlus\Attributes\Validators\Param;
@@ -140,9 +143,10 @@ class UserController extends Controller
     public function login() {}
 }
 ```
-The `rule` supports Laravel's built-in rules, except for regular expressions.
 
-For particularly complex rules, it is recommended to use custom validators:
+`rule` 支持 Laravel 的内置规则，除了正则表达式。
+
+对于特别复杂的规则，建议使用自定义验证器：
 ```php
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -160,7 +164,8 @@ class PasswordRule implements ValidationRule
     }
 }
 ```
-In the example above, I wrote a custom rule for a common password validation:
+
+在上面的示例中，我编写了一个常见密码验证的自定义规则：
 ```php
 use Zenith\LaravelPlus\Attributes\Validators\Param;
 
@@ -172,33 +177,31 @@ class UserController
 }
 ```
 
-By default, all parameters are required. You can use the `required` parameter to set them as optional, and use the `default` parameter to set default values:
+默认情况下，所有参数都是必需的。你可以使用 `required` 参数将它们设置为可选，并使用 `default` 参数设置默认值：
 ```php
 use Zenith\LaravelPlus\Attributes\Validators\Param;
 use Zenith\LaravelPlus\Attributes\Requests\RequestBody;
 
 class UserController extends Controller
 {
-
     #[Param(key: 'page', rule: 'integer|min:1|max:100', default: 1, required: false, message: 'page is error')]
     public function queryList(#[RequestBody] QueryParams $params) 
     {
-        dump($params->getPage());       // output: 1
+        dump($params->getPage());       // 输出: 1
     }
 }
 ```
 
-
 ## Bean
 
-Long-term dependency, PHPers are accustomed to using powerful arrays as carriers for all data. This is not an elegant practice and has the following problems:
+长期以来，PHP 开发者习惯于使用功能强大的数组作为所有数据的载体。这不是一个优雅的做法，并且存在以下问题：
 
-* Array keys are easily misspelled, and when these errors are discovered, it's already at runtime.
-* The coding process is not smooth; you always need to pause to think about what the next key is.
-* It violates the single responsibility principle, often having all data in one huge array.
-* It reduces code extensibility, readability, and robustness...
+* 数组键容易拼写错误，当发现这些错误时，已经是运行时了
+* 编码过程不够流畅；你总是需要暂停思考下一个键是什么
+* 违反了单一职责原则，经常将所有数据放在一个巨大的数组中
+* 降低了代码的可扩展性、可读性和健壮性...
 
-Therefore, I introduced the concept of Bean. A Bean is a data carrier with strongly typed properties, allowing you to get better hints during the coding process:
+因此，我引入了 Bean 的概念。Bean 是一个具有强类型属性的数据载体，让你在编码过程中获得更好的提示：
 
 ```php
 use Zenith\LaravelPlus\Bean;
@@ -218,39 +221,40 @@ class RegisterParams extends Bean
 
 new RegisterParams(['username' => 'bob', 'password' => 'passw0rd']);
 ```
-You can initialize a Bean using an array, which is the most common method.Of course, sometimes you can also convert from one Bean to another Bean, and it will filter out mismatched fields:
+
+你可以使用数组初始化 Bean，这是最常见的方法。当然，有时你也可以从一个 Bean 转换为另一个 Bean，它会过滤掉不匹配的字段：
 ```php
 use Zenith\LaravelPlus\Bean;
 
 $bean = new Bean();
 class Bar extends Bean {  
-    // some properties  
+    // 一些属性  
 }
 Bar::fromBean($bean)
 ```
-You can easily convert a Bean to an array or JSON, By default, snake case naming will be used. You can turn off this feature using the usingSnakeCase parameter:
+
+你可以轻松地将 Bean 转换为数组或 JSON。默认情况下，将使用蛇形命名法。你可以使用 `usingSnakeCase` 参数关闭此功能：
 ```php
 use Zenith\LaravelPlus\Bean;
 
 $bean = new Bean();
-$arr = $bean->toArray(usingSnakeCase: false)
+$arr = $bean->toArray(usingSnakeCase: false);
 $json = $bean->toJson(usingSnakeCase: true);
 ```
 
-Sometimes, you may need to compare two Beans:
+有时，你可能需要比较两个 Bean：
 ```php
 use Zenith\LaravelPlus\Bean;
 (new Bean())->equals($bean2);
 ```
 
-Often, we need to perform preliminary work such as type conversion on the data passed from the client:
+通常，我们需要对从客户端传递的数据进行类型转换等预处理工作：
 ```php
-use Zenith\LaravelPlus\Bean::
+use Zenith\LaravelPlus\Bean;
 use Zenith\LaravelPlus\Attributes\TypeConverter;
 
 class User extends Bean
 {
-    
     #[TypeConverter(value: BoolConverter::class)]
     protected BoolEnum $isGuest;
 }
@@ -270,9 +274,10 @@ class BoolConverter
     }
 }
 ```
-You can even perform XSS filtering.
 
-A particularly useful feature of Beans is their support for nesting:
+你甚至可以执行 XSS 过滤。
+
+Bean 的一个特别有用的功能是支持嵌套：
 ```php
 use Zenith\LaravelPlus\Bean;
 
@@ -286,7 +291,8 @@ class Company extends Bean
     protected string $name;
 }
 ```
-It even supports array nesting:
+
+它甚至支持数组嵌套：
 ```php
 use Zenith\LaravelPlus\Bean;
 use Zenith\LaravelPlus\Attributes\BeanList;
@@ -309,9 +315,9 @@ foreach ($user->getCompanies() as $company) {
 }
 ```
 
-### Autowired
+## 自动装配
 
-In the Java Spring Boot framework, the `@Autowired` annotation is used to automatically inject dependencies. In Laravel-Plus, we can use the `#[Autowired]` annotation to achieve the same effect。
+在 Java Spring Boot 框架中，`@Autowired` 注解用于自动注入依赖。在 Laravel-Plus 中，我们可以使用 `#[Autowired]` 注解来实现相同的效果。
 
 ```php
 use Zenith\LaravelPlus\Traits\Injectable;
@@ -337,4 +343,36 @@ class UserService
     public function register() {}
 }
 ```
-The `#[Autowired]` annotation can be used on properties. The `#[Service]` annotation is used to mark the class as a service, which is required for autowiring.
+
+`#[Autowired]` 注解可以用于属性。`#[Service]` 注解用于将类标记为服务，这是自动装配所必需的。
+
+## 配置值注入
+
+除了依赖注入之外，Laravel-Plus 还支持配置值注入功能，让你可以直接将 Laravel 配置文件中的值注入到类属性中：
+
+```php
+use Zenith\LaravelPlus\Traits\Injectable;
+use Zenith\LaravelPlus\Attributes\Value;
+
+class DatabaseService
+{
+    use Injectable;
+    
+    #[Value('database.connections.mysql.host', 'localhost')]
+    private string $dbHost;
+    
+    #[Value('database.connections.mysql.port', 3306)]
+    private int $dbPort;
+    
+    #[Value('app.timezone', 'UTC')]
+    private string $timezone;
+    
+    public function connect()
+    {
+        // 使用注入的配置值
+        echo "Connecting to {$this->dbHost}:{$this->dbPort}";
+    }
+}
+```
+
+`#[Value]` 注解的第一个参数是配置键名，第二个参数是可选的默认值。如果配置不存在，将使用默认值。

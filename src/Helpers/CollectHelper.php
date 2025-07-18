@@ -23,7 +23,11 @@ class CollectHelper
     public static function mapAttributeInItems(array $items, array $map, string $attributeName, string $mapAttributeName, mixed $defaultValue = ''): array
     {
         return collect($items)->map(function ($item) use ($attributeName, $mapAttributeName, $defaultValue, $map) {
-            $item[$attributeName] = $map[$item[$mapAttributeName]] ?? $defaultValue;
+            if (! isset($item[$mapAttributeName])) {
+                $item[$attributeName] = $defaultValue;
+            } else {
+                $item[$attributeName] = $map[$item[$mapAttributeName]] ?? $defaultValue;
+            }
 
             return $item;
         })->all();
